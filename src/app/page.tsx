@@ -264,12 +264,12 @@ export default function Home() {
             {clientConfig.companyName}
           </span>
         </div>
-        <div className="flex items-center gap-2">
+        <a href="https://aitechworx.com" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 no-underline">
           <span className="text-xs text-gray-400 font-medium">Powered by</span>
-          <div className="w-5 h-5 rounded-md bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center">
-            <span className="text-[8px] font-bold text-white leading-none">M</span>
+          <div className="h-5 rounded-md bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center px-1.5">
+            <span className="text-[9px] font-bold text-white leading-none tracking-tight">AITW</span>
           </div>
-        </div>
+        </a>
       </header>
 
       {showProgress && (
