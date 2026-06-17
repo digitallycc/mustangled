@@ -20,6 +20,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     "Helvetica Neue", Arial, sans-serif;
+  background: linear-gradient(145deg, #f0fdf4 0%, #ffffff 40%, #f0f9ff 100%);
 }
 
 input,
@@ -50,9 +51,34 @@ button {
   to { opacity: 1; }
 }
 
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(37, 211, 102, 0.15); }
+  50% { box-shadow: 0 0 30px rgba(37, 211, 102, 0.3); }
+}
+
+@keyframes floatUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .animate-slide-in {
@@ -63,6 +89,149 @@ button {
   animation: fadeIn 250ms ease-out;
 }
 
+.animate-fade-in-up {
+  animation: fadeInUp 400ms ease-out;
+}
+
 .animate-pulse-slow {
   animation: pulse 1.5s ease-in-out infinite;
 }
+
+.animate-scale-in {
+  animation: scaleIn 350ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.animate-glow {
+  animation: glowPulse 2s ease-in-out infinite;
+}
+
+.animate-float-up {
+  animation: floatUp 400ms ease-out both;
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.05),
+    0 2px 4px -2px rgba(0, 0, 0, 0.03);
+}
+
+.option-card {
+  transition: all 200ms ease;
+  box-shadow:
+    0 1px 3px 0 rgba(0, 0, 0, 0.04),
+    0 1px 2px -1px rgba(0, 0, 0, 0.03);
+}
+
+.option-card:hover {
+  box-shadow:
+    0 4px 12px -2px rgba(0, 0, 0, 0.08),
+    0 2px 4px -2px rgba(0, 0, 0, 0.04);
+  transform: translateY(-1px);
+}
+
+.option-card:active {
+  transform: translateY(0);
+  box-shadow:
+    0 1px 3px 0 rgba(0, 0, 0, 0.04),
+    0 1px 2px -1px rgba(0, 0, 0, 0.03);
+}
+
+.option-card-selected {
+  box-shadow:
+    0 0 0 2px #25D366,
+    0 4px 16px -4px rgba(37, 211, 102, 0.3),
+    0 2px 4px -2px rgba(37, 211, 102, 0.15);
+}
+
+.btn-primary {
+  position: relative;
+  overflow: hidden;
+  transition: all 200ms ease;
+  box-shadow:
+    0 2px 8px -2px rgba(37, 211, 102, 0.4),
+    0 1px 3px -1px rgba(37, 211, 102, 0.2);
+}
+
+.btn-primary::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,0.15) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.btn-primary:hover {
+  box-shadow:
+    0 4px 16px -4px rgba(37, 211, 102, 0.5),
+    0 2px 6px -2px rgba(37, 211, 102, 0.3);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow:
+    0 1px 4px -2px rgba(37, 211, 102, 0.3),
+    0 1px 2px -1px rgba(37, 211, 102, 0.15);
+}
+
+.btn-secondary {
+  transition: all 200ms ease;
+  box-shadow:
+    0 1px 3px 0 rgba(0, 0, 0, 0.04),
+    0 1px 2px -1px rgba(0, 0, 0, 0.03);
+}
+
+.btn-secondary:hover {
+  box-shadow:
+    0 2px 8px -2px rgba(0, 0, 0, 0.08),
+    0 1px 3px -1px rgba(0, 0, 0, 0.04);
+  transform: translateY(-1px);
+}
+
+.btn-secondary:active {
+  transform: translateY(0);
+}
+
+.hero-gradient {
+  background: linear-gradient(
+    135deg,
+    rgba(37, 211, 102, 0.08) 0%,
+    rgba(37, 211, 102, 0.02) 50%,
+    transparent 100%
+  );
+}
+
+.result-gradient {
+  background: linear-gradient(
+    160deg,
+    #f0fdf4 0%,
+    #ffffff 40%,
+    #f0fdf4 100%
+  );
+}
+
+.header-shadow {
+  box-shadow:
+    0 1px 3px 0 rgba(0, 0, 0, 0.03),
+    0 1px 2px -1px rgba(0, 0, 0, 0.02);
+}
+
+.input-focus-ring {
+  transition: all 200ms ease;
+}
+
+.input-focus-ring:focus {
+  box-shadow:
+    0 0 0 3px rgba(37, 211, 102, 0.15),
+    0 2px 8px -2px rgba(37, 211, 102, 0.1);
+}
+
+.stagger-1 { animation-delay: 50ms; }
+.stagger-2 { animation-delay: 100ms; }
+.stagger-3 { animation-delay: 150ms; }
+.stagger-4 { animation-delay: 200ms; }
+.stagger-5 { animation-delay: 250ms; }

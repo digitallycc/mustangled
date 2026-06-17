@@ -22,7 +22,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="h-full" suppressHydrationWarning>
-      <body className="h-dvh overflow-hidden bg-white text-gray-900 flex flex-col">
+      <body className="h-dvh overflow-hidden text-gray-900 flex flex-col" style={{ background: "linear-gradient(145deg, #f0fdf4 0%, #ffffff 40%, #f0f9ff 100%)" }}>
         {children}
       </body>
     </html>

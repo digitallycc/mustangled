@@ -28,29 +28,40 @@ export default function RecommendationScreen({
 
   return (
     <div className="flex-1 flex flex-col">
-      <div className="flex-shrink-0 px-6 pt-6 text-center">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">
-          {recommendation.title}
-        </h1>
-        <p className="text-gray-600 text-sm leading-relaxed">
-          {recommendation.explanation}
-        </p>
+      <div className="flex-shrink-0 hero-gradient rounded-b-3xl mx-4 mt-0 mb-4 pt-6 pb-6 px-6 text-center relative overflow-hidden">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 rounded-full opacity-20 blur-3xl" style={{ background: clientConfig.brandPrimaryColor }} />
+        <div className="relative z-10">
+          <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center shadow-lg animate-scale-in">
+            <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2 animate-float-up stagger-1">
+            {recommendation.title}
+          </h1>
+          <p className="text-gray-600 text-sm leading-relaxed animate-float-up stagger-2">
+            {recommendation.explanation}
+          </p>
+        </div>
       </div>
 
-      <div className="flex-1 px-6 overflow-y-auto min-h-0 mt-3">
+      <div className="flex-1 px-6 overflow-y-auto min-h-0">
         <div className="max-w-md mx-auto">
-          <div className="bg-gray-50 rounded-xl p-4 mb-3">
-            <h2 className="font-semibold text-xs text-gray-500 mb-2 uppercase tracking-wider">
+          <div className="bg-white rounded-2xl p-4 mb-3 border border-gray-100 shadow-sm animate-float-up stagger-3">
+            <h2 className="font-semibold text-xs text-gray-500 mb-3 uppercase tracking-wider">
               Your Selections
             </h2>
-            <div className="space-y-2">
+            <div className="space-y-2.5">
               {[
-                { label: "Use case", value: getUseCaseLabel(input.useCase) },
-                { label: "Installation", value: getEnvironmentLabel(input.environment) },
-                { label: "Size", value: getSizeCategoryLabel(input.sizeCategory) },
+                { label: "Use case", value: getUseCaseLabel(input.useCase), icon: "📍" },
+                { label: "Installation", value: getEnvironmentLabel(input.environment), icon: "🔧" },
+                { label: "Size", value: getSizeCategoryLabel(input.sizeCategory), icon: "📐" },
               ].map((item) => (
                 <div key={item.label} className="flex justify-between items-center">
-                  <span className="text-sm text-gray-500">{item.label}</span>
+                  <span className="text-sm text-gray-500 flex items-center gap-2">
+                    <span className="text-xs">{item.icon}</span>
+                    {item.label}
+                  </span>
                   <span className="text-sm font-medium text-gray-900">
                     {item.value}
                   </span>
@@ -59,26 +70,33 @@ export default function RecommendationScreen({
             </div>
           </div>
 
-          <div className="rounded-xl p-4 border-2 border-gray-100 bg-gray-50 mb-3">
-            <div className="mb-1.5">
-              <span className="text-sm font-semibold text-gray-700">
-                Next Step
-              </span>
+          <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm animate-float-up stagger-4">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <svg className="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                </svg>
+              </div>
+              <div>
+                <span className="text-sm font-semibold text-gray-700 block mb-1">
+                  Suggested Next Step
+                </span>
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  {recommendation.suggestedNextStep}
+                </p>
+              </div>
             </div>
-            <p className="text-sm text-gray-600 leading-relaxed">
-              {recommendation.suggestedNextStep}
-            </p>
           </div>
         </div>
       </div>
 
       <div className="flex-shrink-0 px-6 pb-5 pt-2">
-        <div className="max-w-md mx-auto space-y-2">
+        <div className="max-w-md mx-auto space-y-2.5">
           <button
             type="button"
             onClick={onWhatsAppHandoff}
             disabled={isSubmitting}
-            className="w-full py-[14px] px-6 text-base font-semibold text-white rounded-xl transition-all hover:opacity-90 active:scale-[0.98] touch-manipulation flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+            className="w-full py-[14px] px-6 text-base font-semibold text-white rounded-2xl transition-all hover:opacity-90 active:scale-[0.98] touch-manipulation flex items-center justify-center gap-2.5 disabled:opacity-70 disabled:cursor-not-allowed btn-primary animate-float-up stagger-5"
             style={{ backgroundColor: clientConfig.brandPrimaryColor }}
           >
             {isSubmitting ? (
@@ -100,7 +118,7 @@ export default function RecommendationScreen({
             type="button"
             onClick={onRestart}
             disabled={isSubmitting}
-            className="w-full py-3 px-6 text-sm font-medium text-gray-600 rounded-xl border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all touch-manipulation disabled:opacity-50"
+            className="w-full py-3 px-6 text-sm font-medium text-gray-500 rounded-2xl border border-gray-200 hover:border-gray-300 hover:bg-white transition-all touch-manipulation disabled:opacity-50 btn-secondary"
           >
             Start Over
           </button>
