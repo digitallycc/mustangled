@@ -1,0 +1,100 @@
+<div id="mustangled-hook-widget"></div>
+<script>
+(function() {
+  var baseUrl = window.MUSTANGLED_BASE_URL || "https://mustangled.com";
+  var companyName = window.MUSTANGLED_COMPANY_NAME || "Mustang LED";
+
+  var container = document.getElementById("mustangled-hook-widget");
+
+  var styles = document.createElement("style");
+  styles.textContent = [
+    "#mustangled-hook-widget * { box-sizing: border-box; margin: 0; padding: 0; }",
+    "#mustangled-hook-widget { position: fixed; bottom: 20px; right: 20px; z-index: 999999; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }",
+    ".mhw-btn { display: flex; align-items: center; gap: 10px; padding: 14px 20px; background: #25D366; color: #fff; border: none; border-radius: 50px; cursor: pointer; box-shadow: 0 4px 20px rgba(37, 211, 102, 0.35); transition: all 0.2s ease; font-size: 15px; font-weight: 600; line-height: 1.2; }",
+    ".mhw-btn:hover { transform: scale(1.03); box-shadow: 0 6px 28px rgba(37, 211, 102, 0.45); }",
+    ".mhw-btn:active { transform: scale(0.97); }",
+    ".mhw-icon { width: 24px; height: 24px; flex-shrink: 0; }",
+    ".mhw-icon svg { display: block; }",
+    ".mhw-collapsed .mhw-btn { width: 56px; height: 56px; padding: 0; justify-content: center; border-radius: 50%; }",
+    ".mhw-collapsed .mhw-text { display: none; }",
+    ".mhw-collapsed .mhw-icon { margin: 0; }",
+    ".mhw-expanded .mhw-btn { padding: 14px 24px 14px 20px; }",
+    ".mhw-popup { display: none; position: absolute; bottom: 70px; right: 0; width: 320px; background: #fff; border-radius: 16px; box-shadow: 0 8px 40px rgba(0,0,0,0.15); overflow: hidden; }",
+    ".mhw-popup.show { display: block; }",
+    ".mhw-popup-header { padding: 20px; background: #25D366; color: #fff; }",
+    ".mhw-popup-header h3 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }",
+    ".mhw-popup-header p { font-size: 13px; opacity: 0.9; }",
+    ".mhw-popup-body { padding: 20px; }",
+    ".mhw-popup-body p { font-size: 14px; color: #374151; line-height: 1.5; margin-bottom: 16px; }",
+    ".mhw-cta { display: block; width: 100%; padding: 14px; background: #25D366; color: #fff; border: none; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; text-align: center; text-decoration: none; transition: opacity 0.2s; }",
+    ".mhw-cta:hover { opacity: 0.9; }",
+    ".mhw-close { position: absolute; top: 12px; right: 12px; background: none; border: none; color: rgba(255,255,255,0.8); font-size: 20px; cursor: pointer; padding: 4px; line-height: 1; }",
+    "@media (max-width: 480px) { #mustangled-hook-widget { bottom: 16px; right: 16px; } .mhw-popup { width: calc(100vw - 32px); right: 0; } }"
+  ].join("");
+  document.head.appendChild(styles);
+
+  var collapsed = true;
+  var popupOpen = false;
+
+  var widget = document.createElement("div");
+  widget.className = "mhw-collapsed";
+
+  var btn = document.createElement("button");
+  btn.className = "mhw-btn";
+  btn.setAttribute("aria-label", "Get LED screen guidance on WhatsApp");
+  btn.innerHTML = '<span class="mhw-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></span><span class="mhw-text">Need help choosing an SMD screen?</span>';
+
+  var popup = document.createElement("div");
+  popup.className = "mhw-popup";
+  popup.innerHTML = [
+    '<div class="mhw-popup-header"><button class="mhw-close" aria-label="Close">&times;</button><h3>' + companyName + '</h3><p>LED Screen Guidance</p></div>',
+    '<div class="mhw-popup-body">',
+    '<p>Not sure which LED screen fits your space? Answer 3 quick questions and we\'ll recommend the right solution on WhatsApp.</p>',
+    '<a class="mhw-cta" href="' + baseUrl + '" target="_blank" rel="noopener">Get WhatsApp guidance</a>',
+    '</div>'
+  ].join("");
+
+  widget.appendChild(btn);
+  widget.appendChild(popup);
+  container.appendChild(widget);
+
+  btn.addEventListener("click", function(e) {
+    e.stopPropagation();
+    if (collapsed) {
+      collapsed = false;
+      widget.className = "mhw-expanded";
+      popup.classList.add("show");
+      popupOpen = true;
+    } else if (popupOpen) {
+      window.open(baseUrl, "_blank");
+    } else {
+      collapsed = true;
+      widget.className = "mhw-collapsed";
+    }
+  });
+
+  popup.querySelector(".mhw-close").addEventListener("click", function(e) {
+    e.stopPropagation();
+    popup.classList.remove("show");
+    popupOpen = false;
+    collapsed = true;
+    widget.className = "mhw-collapsed";
+  });
+
+  popup.querySelector(".mhw-cta").addEventListener("click", function() {
+    collapsed = true;
+    widget.className = "mhw-collapsed";
+    popup.classList.remove("show");
+    popupOpen = false;
+  });
+
+  document.addEventListener("click", function() {
+    if (popupOpen) {
+      popup.classList.remove("show");
+      popupOpen = false;
+      collapsed = true;
+      widget.className = "mhw-collapsed";
+    }
+  });
+})();
+</script>

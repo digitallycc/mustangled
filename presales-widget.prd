@@ -1,0 +1,571 @@
+# WhatsApp-First SMD Presales Widget — Next.js Static Site Specs
+
+## Objective
+
+Build a mobile-first static Next.js presales flow for SMD / LED display companies.
+
+The flow starts from a small WhatsApp-style hook widget placed on the client's website. On click, the visitor lands on a hosted page on our platform, such as:
+
+```txt
+https://client-slug.ourdomain.com
+```
+
+or:
+
+```txt
+https://ourdomain.com/client-slug
+```
+
+The page collects the visitor's WhatsApp number first, then asks a maximum of 3 qualifying questions. The goal is to generate a useful screen recommendation and hand the visitor off to WhatsApp with a prefilled message.
+
+---
+
+## Core UX Principles
+
+* Mobile-first.
+* Designed for 90%+ mobile browser traffic.
+* Full-screen step-by-step flow.
+* No scrolling during the question flow.
+* One question per screen.
+* Each screen replaces the previous screen.
+* Maximum 3 qualification questions after WhatsApp number.
+* No technical jargon.
+* No pixel pitch question.
+* No cabinet/controller/brightness/refresh-rate questions.
+* Use tap-friendly cards/buttons.
+* Make WhatsApp the primary conversion medium.
+* The flow should feel like guidance, not a form.
+
+---
+
+## Flow Structure
+
+### Step 0: Intro / Landing
+
+Purpose:
+
+* Confirm the visitor is in the right place.
+* Explain that the tool will recommend the right SMD / LED screen.
+* Mention WhatsApp guidance.
+
+Primary action:
+
+```txt
+Start
+```
+
+---
+
+### Step 1: WhatsApp Number
+
+This is the first data capture screen.
+
+Fields:
+
+```ts
+whatsappNumber: string
+```
+
+Rules:
+
+* Required.
+* Must validate as a phone-like number.
+* Accept local Pakistani mobile format and international format.
+* Normalize where possible.
+* Do not ask for name or email at this stage.
+
+Suggested accepted formats:
+
+```txt
+03XXXXXXXXX
+923XXXXXXXXX
++923XXXXXXXXX
+```
+
+Validation behavior:
+
+* Disable Next until basic validation passes, or show inline error after blur/click.
+* Keep error text short.
+* Show privacy reassurance under the input.
+
+---
+
+### Step 2: Use Case
+
+Field:
+
+```ts
+useCase:
+  | "shop_retail"
+  | "restaurant_menu"
+  | "outdoor_advertising"
+  | "office_meeting"
+  | "event_stage"
+  | "not_sure"
+```
+
+Question:
+
+```txt
+What do you need the screen for?
+```
+
+Options:
+
+```txt
+Shop / Retail
+Restaurant Menu
+Outdoor Advertising
+Office / Meeting Room
+Event / Stage
+Not Sure
+```
+
+---
+
+### Step 3: Installation Location
+
+Field:
+
+```ts
+environment:
+  | "indoor"
+  | "outdoor"
+  | "semi_outdoor_shopfront"
+  | "not_sure"
+```
+
+Question:
+
+```txt
+Where will it be installed?
+```
+
+Options:
+
+```txt
+Indoor
+Outdoor
+Shopfront / Semi-outdoor
+Not Sure
+```
+
+---
+
+### Step 4: Size Category
+
+Field:
+
+```ts
+sizeCategory:
+  | "small"
+  | "medium"
+  | "large"
+  | "very_large_billboard"
+  | "not_sure"
+```
+
+Question:
+
+```txt
+Roughly how big should it be?
+```
+
+Options:
+
+```txt
+Small: up to 6 ft
+Medium: 6–12 ft
+Large: 12–25 ft
+Very Large / Billboard
+Not Sure
+```
+
+---
+
+## Recommendation Logic
+
+Create a deterministic function.
+
+```ts
+type PresalesInput = {
+  whatsappNumber: string
+  useCase: "shop_retail" | "restaurant_menu" | "outdoor_advertising" | "office_meeting" | "event_stage" | "not_sure"
+  environment: "indoor" | "outdoor" | "semi_outdoor_shopfront" | "not_sure"
+  sizeCategory: "small" | "medium" | "large" | "very_large_billboard" | "not_sure"
+}
+
+type RecommendationType =
+  | "indoor_smd"
+  | "outdoor_smd"
+  | "digital_menu_board"
+  | "office_video_wall"
+  | "event_led_screen"
+  | "outdoor_billboard"
+  | "transparent_shopfront_led"
+  | "needs_human_guidance"
+
+type Recommendation = {
+  type: RecommendationType
+  title: string
+  explanation: string
+  suggestedNextStep: string
+  whatsappMessage: string
+  leadScore: number
+}
+```
+
+Suggested mapping:
+
+```ts
+function getRecommendation(input: PresalesInput): RecommendationType {
+  if (input.useCase === "restaurant_menu") {
+    return "digital_menu_board"
+  }
+
+  if (input.useCase === "office_meeting") {
+    return "office_video_wall"
+  }
+
+  if (input.useCase === "event_stage") {
+    return "event_led_screen"
+  }
+
+  if (input.useCase === "outdoor_advertising") {
+    if (input.sizeCategory === "very_large_billboard" || input.environment === "outdoor") {
+      return "outdoor_billboard"
+    }
+    return "outdoor_smd"
+  }
+
+  if (input.environment === "outdoor") {
+    return "outdoor_smd"
+  }
+
+  if (input.environment === "semi_outdoor_shopfront") {
+    return "transparent_shopfront_led"
+  }
+
+  if (input.useCase === "shop_retail") {
+    return "indoor_smd"
+  }
+
+  return "needs_human_guidance"
+}
+```
+
+---
+
+## Lead Scoring
+
+Use simple lead scoring.
+
+```ts
+function calculateLeadScore(input: PresalesInput): number {
+  let score = 40
+
+  if (input.whatsappNumber) score += 20
+
+  if (input.environment === "outdoor") score += 15
+  if (input.environment === "semi_outdoor_shopfront") score += 10
+
+  if (input.sizeCategory === "large") score += 15
+  if (input.sizeCategory === "very_large_billboard") score += 25
+
+  if (input.useCase === "outdoor_advertising") score += 15
+  if (input.useCase === "office_meeting") score += 10
+  if (input.useCase === "not_sure") score -= 5
+  if (input.sizeCategory === "not_sure") score -= 5
+
+  return Math.max(0, Math.min(100, score))
+}
+```
+
+Lead temperature:
+
+```ts
+function getLeadTemperature(score: number): "hot" | "warm" | "nurture" {
+  if (score >= 80) return "hot"
+  if (score >= 55) return "warm"
+  return "nurture"
+}
+```
+
+---
+
+## WhatsApp Handoff
+
+Final CTA should open WhatsApp with a prefilled message.
+
+Use the format:
+
+```ts
+const whatsappUrl = `https://wa.me/${businessWhatsappNumber}?text=${encodeURIComponent(message)}`
+```
+
+The prefilled message should include:
+
+```txt
+Hello, I need guidance for an SMD / LED screen.
+
+My requirement:
+- Use case: {useCaseLabel}
+- Installation: {environmentLabel}
+- Size: {sizeCategoryLabel}
+- Suggested solution: {recommendationTitle}
+- My WhatsApp: {visitorWhatsappNumber}
+
+Please guide me with the best option and estimated price.
+```
+
+The business WhatsApp number should be configurable per client.
+
+---
+
+## Client Configuration
+
+Support a static client config object.
+
+```ts
+type ClientConfig = {
+  slug: string
+  companyName: string
+  businessWhatsappNumber: string
+  brandPrimaryColor?: string
+  brandLogoUrl?: string
+  websiteUrl?: string
+}
+
+const clientConfig: ClientConfig = {
+  slug: "mustang-led",
+  companyName: "Mustang LED",
+  businessWhatsappNumber: "923XXXXXXXXX",
+  brandPrimaryColor: "#25D366",
+  brandLogoUrl: "/clients/mustang-led/logo.png",
+  websiteUrl: "https://mustangled.com"
+}
+```
+
+No placeholders should remain in production config.
+
+---
+
+## Website Hook Widget
+
+Create an embeddable hook widget for client websites.
+
+Purpose:
+
+* Show WhatsApp logo/icon.
+* Make clear the interaction continues through WhatsApp.
+* Send user to the hosted presales page.
+
+Visual behavior:
+
+* Floating bottom-right widget on mobile and desktop.
+* Compact but noticeable.
+* WhatsApp icon visible.
+* Short hook text next to icon.
+* Tap/click opens hosted presales URL.
+* Should not cover important page content.
+* On mobile, keep width reasonable and avoid blocking checkout/contact buttons.
+
+Suggested widget states:
+
+```txt
+Collapsed: WhatsApp icon only
+Expanded: "Need help choosing an SMD screen?"
+CTA: "Get WhatsApp guidance"
+```
+
+Implementation options:
+
+1. Simple script embed
+2. iframe embed
+3. Copy-paste HTML snippet
+
+For MVP, simple HTML/JS snippet is acceptable.
+
+---
+
+## Page Layout Requirements
+
+* Use Next.js App Router.
+* Static-rendered where possible.
+* Client-side state for the step flow.
+* Full viewport height screens.
+* Use `100dvh` for mobile viewport correctness.
+* No vertical scrolling in the main question flow.
+* Large tap targets.
+* Back button supported.
+* Progress indicator visible but minimal.
+* Bottom sticky CTA area inside the full-screen layout.
+* Use accessible buttons, not divs.
+* Keyboard-friendly enough for desktop.
+
+Recommended screen structure:
+
+```tsx
+<main className="min-h-[100dvh] flex flex-col">
+  <header>
+    Logo / Company name / Progress
+  </header>
+
+  <section className="flex-1 flex flex-col justify-center">
+    Question content
+  </section>
+
+  <footer>
+    Back / NEXT CTA
+  </footer>
+</main>
+```
+
+---
+
+## State Management
+
+Local component state is enough for MVP.
+
+```ts
+type Step =
+  | "intro"
+  | "whatsapp"
+  | "use_case"
+  | "environment"
+  | "size"
+  | "recommendation"
+```
+
+Persist state to `localStorage` so refresh does not lose progress.
+
+Clear state after successful WhatsApp handoff only if desired.
+
+---
+
+## Analytics Events
+
+Track these events:
+
+```txt
+hook_clicked
+flow_started
+whatsapp_entered
+question_answered_use_case
+question_answered_environment
+question_answered_size
+recommendation_viewed
+whatsapp_handoff_clicked
+flow_abandoned
+```
+
+Each event should include:
+
+```ts
+{
+  clientSlug: string
+  step: string
+  timestamp: string
+  useCase?: string
+  environment?: string
+  sizeCategory?: string
+  recommendationType?: string
+  leadScore?: number
+}
+```
+
+Avoid storing sensitive data in analytics unless needed and consented.
+
+---
+
+## Optional Lead Capture Endpoint
+
+Static frontend can work without backend by using only WhatsApp handoff.
+
+If backend/API is available, submit lead before WhatsApp redirect.
+
+Payload:
+
+```ts
+type LeadPayload = {
+  clientSlug: string
+  whatsappNumber: string
+  useCase: string
+  environment: string
+  sizeCategory: string
+  recommendationType: string
+  recommendationTitle: string
+  leadScore: number
+  leadTemperature: "hot" | "warm" | "nurture"
+  sourceUrl: string
+  createdAt: string
+}
+```
+
+API behavior:
+
+* Save lead.
+* Optionally push to Odoo CRM.
+* Return success quickly.
+* Do not block WhatsApp handoff if the API fails.
+* If API fails, still open WhatsApp.
+
+---
+
+## Styling Direction
+
+* Clean B2B look.
+* WhatsApp green can be used for CTAs.
+* Avoid clutter.
+* Use simple icons or emoji only if brand allows.
+* Cards should be large and thumb-friendly.
+* Recommendation screen should feel rewarding and useful.
+
+Option card requirements:
+
+* Minimum height: 56px.
+* Clear selected state.
+* Entire card clickable.
+* Avoid dense text.
+* Support one-handed mobile use.
+
+---
+
+## Accessibility
+
+* Use semantic HTML.
+* Buttons must have visible labels.
+* Inputs must have labels.
+* Focus states required.
+* Color contrast should be acceptable.
+* Do not rely only on color for selected state.
+* Error messages should be associated with inputs where possible.
+
+---
+
+## Non-Goals for MVP
+
+Do not build:
+
+* Voice AI agent.
+* Full chatbot.
+* Complex multi-turn conversation engine.
+* Exact price calculator.
+* Pixel pitch configurator.
+* Admin dashboard.
+* Payment flow.
+* Product catalog.
+* User login.
+* Meta WhatsApp Business API integration.
+
+---
+
+## Final MVP Success Criteria
+
+The MVP is successful if:
+
+* A mobile visitor can complete the flow in under 30 seconds.
+* The visitor understands which SMD / LED screen type is likely suitable.
+* The visitor can continue on WhatsApp with a useful prefilled message.
+* The business receives a lead with use case, environment, size category, recommendation, and lead score.
+* The experience feels easier than filling a contact form.
