@@ -1,7 +1,7 @@
 export const clientConfig = {
   slug: "mustang-led",
   companyName: "Mustang LED",
-  businessWhatsappNumber: "923XXXXXXXXX",
+  businessWhatsappNumber: "923315550505",
   brandPrimaryColor: "#25D366",
   brandLogoUrl: "/clients/mustang-led/logo.png",
   websiteUrl: "https://mustangled.com",
