@@ -22,7 +22,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="h-full" suppressHydrationWarning>
-      <body className="h-dvh overflow-hidden bg-white text-gray-900">
+      <body className="h-dvh overflow-hidden bg-white text-gray-900 flex flex-col">
         {children}
       </body>
     </html>

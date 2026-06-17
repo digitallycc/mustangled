@@ -168,7 +168,6 @@ export default function Home() {
   }, []);
 
   const showProgress = currentStep >= 0 && currentStep < STEPS.length - 1;
-  const showBack = currentStep > 0 && currentStep < STEPS.length - 1;
 
   const renderScreen = () => {
     const screenKey = currentStep;
@@ -274,22 +273,6 @@ export default function Home() {
       <div className="flex-1 flex flex-col relative overflow-hidden">
         {renderScreen()}
       </div>
-
-      {showBack && (
-        <footer className="w-full px-6 py-4 max-w-xl mx-auto">
-          <button
-            type="button"
-            onClick={handleBack}
-            disabled={isSubmitting}
-            className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors touch-manipulation disabled:opacity-50"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            Back
-          </button>
-        </footer>
-      )}
     </main>
   );
 }

@@ -34,74 +34,69 @@ export default function RecommendationScreen({
   const ctaLabel = getCTALabel(recommendation.type);
 
   return (
-    <div className="flex-1 flex flex-col justify-center px-6">
-      <div className="w-full max-w-md mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">
-            {recommendation.title}
-          </h1>
-          <p className="text-gray-600 text-base sm:text-lg leading-relaxed">
-            {recommendation.explanation}
-          </p>
-        </div>
+    <div className="flex-1 flex flex-col">
+      <div className="flex-shrink-0 px-6 pt-6 text-center">
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">
+          {recommendation.title}
+        </h1>
+        <p className="text-gray-600 text-sm leading-relaxed">
+          {recommendation.explanation}
+        </p>
+      </div>
 
-        <div className="bg-gray-50 rounded-xl p-6 mb-6">
-          <h2 className="font-semibold text-sm text-gray-500 mb-3 uppercase tracking-wider">
-            Your Selections
-          </h2>
-          <div className="space-y-3">
-            {[
-              { label: "Use case", value: getUseCaseLabel(input.useCase) },
-              {
-                label: "Installation",
-                value: getEnvironmentLabel(input.environment),
-              },
-              {
-                label: "Size",
-                value: getSizeCategoryLabel(input.sizeCategory),
-              },
-            ].map((item) => (
-              <div
-                key={item.label}
-                className="flex justify-between items-center"
-              >
-                <span className="text-sm text-gray-500">{item.label}</span>
-                <span className="text-sm font-medium text-gray-900">
-                  {item.value}
-                </span>
-              </div>
-            ))}
+      <div className="flex-1 px-6 overflow-y-auto min-h-0 mt-3">
+        <div className="max-w-md mx-auto">
+          <div className="bg-gray-50 rounded-xl p-4 mb-3">
+            <h2 className="font-semibold text-xs text-gray-500 mb-2 uppercase tracking-wider">
+              Your Selections
+            </h2>
+            <div className="space-y-2">
+              {[
+                { label: "Use case", value: getUseCaseLabel(input.useCase) },
+                { label: "Installation", value: getEnvironmentLabel(input.environment) },
+                { label: "Size", value: getSizeCategoryLabel(input.sizeCategory) },
+              ].map((item) => (
+                <div key={item.label} className="flex justify-between items-center">
+                  <span className="text-sm text-gray-500">{item.label}</span>
+                  <span className="text-sm font-medium text-gray-900">
+                    {item.value}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div
+            className={`rounded-xl p-4 border-2 mb-3 ${
+              recommendation.leadTemperature === "hot"
+                ? "border-red-200 bg-red-50"
+                : recommendation.leadTemperature === "warm"
+                ? "border-amber-200 bg-amber-50"
+                : "border-blue-200 bg-blue-50"
+            }`}
+          >
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-sm font-semibold text-gray-700">
+                Next Step
+              </span>
+              <span className={`text-xs font-bold ${leadColor} uppercase`}>
+                {recommendation.leadTemperature}
+              </span>
+            </div>
+            <p className="text-sm text-gray-600 leading-relaxed">
+              {recommendation.suggestedNextStep}
+            </p>
           </div>
         </div>
+      </div>
 
-        <div
-          className={`rounded-xl p-5 border-2 mb-6 ${
-            recommendation.leadTemperature === "hot"
-              ? "border-red-200 bg-red-50"
-              : recommendation.leadTemperature === "warm"
-              ? "border-amber-200 bg-amber-50"
-              : "border-blue-200 bg-blue-50"
-          }`}
-        >
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-semibold text-gray-700">
-              Next Step
-            </span>
-            <span className={`text-xs font-bold ${leadColor} uppercase`}>
-              {recommendation.leadTemperature}
-            </span>
-          </div>
-          <p className="text-sm text-gray-600 leading-relaxed">
-            {recommendation.suggestedNextStep}
-          </p>
-        </div>
-
-        <div className="space-y-3">
+      <div className="flex-shrink-0 px-6 pb-5 pt-2">
+        <div className="max-w-md mx-auto space-y-2">
           <button
             type="button"
             onClick={onWhatsAppHandoff}
             disabled={isSubmitting}
-            className="w-full py-5 px-6 text-base font-semibold text-white rounded-xl transition-all hover:opacity-90 active:scale-[0.98] touch-manipulation flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+            className="w-full py-[14px] px-6 text-base font-semibold text-white rounded-xl transition-all hover:opacity-90 active:scale-[0.98] touch-manipulation flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
             style={{ backgroundColor: clientConfig.brandPrimaryColor }}
           >
             {isSubmitting ? (
@@ -123,7 +118,7 @@ export default function RecommendationScreen({
             type="button"
             onClick={onRestart}
             disabled={isSubmitting}
-            className="w-full py-4 px-6 text-base font-medium text-gray-600 rounded-xl border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all touch-manipulation disabled:opacity-50"
+            className="w-full py-3 px-6 text-sm font-medium text-gray-600 rounded-xl border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all touch-manipulation disabled:opacity-50"
           >
             Start Over
           </button>
