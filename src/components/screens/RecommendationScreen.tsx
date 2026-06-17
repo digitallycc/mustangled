@@ -24,13 +24,6 @@ export default function RecommendationScreen({
   onRestart,
   isSubmitting,
 }: RecommendationScreenProps) {
-  const leadColor =
-    recommendation.leadTemperature === "hot"
-      ? "text-red-600"
-      : recommendation.leadTemperature === "warm"
-      ? "text-amber-600"
-      : "text-blue-600";
-
   const ctaLabel = getCTALabel(recommendation.type);
 
   return (
@@ -66,21 +59,10 @@ export default function RecommendationScreen({
             </div>
           </div>
 
-          <div
-            className={`rounded-xl p-4 border-2 mb-3 ${
-              recommendation.leadTemperature === "hot"
-                ? "border-red-200 bg-red-50"
-                : recommendation.leadTemperature === "warm"
-                ? "border-amber-200 bg-amber-50"
-                : "border-blue-200 bg-blue-50"
-            }`}
-          >
-            <div className="flex items-center justify-between mb-1.5">
+          <div className="rounded-xl p-4 border-2 border-gray-100 bg-gray-50 mb-3">
+            <div className="mb-1.5">
               <span className="text-sm font-semibold text-gray-700">
                 Next Step
-              </span>
-              <span className={`text-xs font-bold ${leadColor} uppercase`}>
-                {recommendation.leadTemperature}
               </span>
             </div>
             <p className="text-sm text-gray-600 leading-relaxed">
