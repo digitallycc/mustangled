@@ -16,26 +16,13 @@ Start on WhatsApp
 
 ---
 
-# Screen 0: Intro
+# Screen 0: Intro + WhatsApp Number
 
 ## Heading
 Find the right LED screen for your space
 
 ## Subheading
 Answer 3 quick questions and get a recommendation on WhatsApp. No tech knowledge needed.
-
-## CTA button
-Start
-
----
-
-# Screen 1: WhatsApp Number
-
-## Heading
-Where should we send your recommendation?
-
-## Subheading
-We'll text you the results on WhatsApp right here.
 
 ## Input placeholder
 Enter your WhatsApp number
@@ -53,7 +40,7 @@ Get My Recommendation
 
 ---
 
-# Screen 2: Use Case
+# Screen 1: Use Case
 
 ## Heading
 What do you need the screen for?
@@ -74,7 +61,7 @@ Next
 
 ---
 
-# Screen 3: Installation Location
+# Screen 2: Installation Location
 
 ## Heading
 Where will it be installed?
@@ -93,7 +80,7 @@ Next
 
 ---
 
-# Screen 4: Size
+# Screen 3: Size
 
 ## Heading
 Roughly how big should it be?
@@ -113,7 +100,7 @@ See My Recommendation
 
 ---
 
-# Screen 5: Recommendation
+# Screen 4: Recommendation
 
 ## Indoor SMD Screen
 - **Result heading:** We recommend an indoor SMD screen
