@@ -27,6 +27,8 @@ const FUNNEL_STORAGE_KEYS = [
   "useCase",
   "environment",
   "sizeCategory",
+  "externalId",
+  "receivedAt",
 ];
 
 function loadState<T>(key: string, fallback: T): T {
@@ -55,6 +57,8 @@ export default function Home() {
   const [useCase, setUseCase] = useState<UseCase | null>(() => loadState("useCase", null));
   const [environment, setEnvironment] = useState<Environment | null>(() => loadState("environment", null));
   const [sizeCategory, setSizeCategory] = useState<SizeCategory | null>(() => loadState("sizeCategory", null));
+  const [externalId, setExternalId] = useState<string>(() => loadState("externalId", ""));
+  const [receivedAt, setReceivedAt] = useState<string>(() => loadState("receivedAt", ""));
   const [isValidating, setIsValidating] = useState(false);
   const [deliveryStatus, setDeliveryStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
   const [maskedNumber, setMaskedNumber] = useState("");
@@ -65,6 +69,8 @@ export default function Home() {
   useEffect(() => { saveState("useCase", useCase); }, [useCase]);
   useEffect(() => { saveState("environment", environment); }, [environment]);
   useEffect(() => { saveState("sizeCategory", sizeCategory); }, [sizeCategory]);
+  useEffect(() => { saveState("externalId", externalId); }, [externalId]);
+  useEffect(() => { saveState("receivedAt", receivedAt); }, [receivedAt]);
 
   const answers: PresalesAnswers | null = useMemo(() => {
     if (!useCase || !environment || !sizeCategory) return null;
@@ -73,6 +79,10 @@ export default function Home() {
 
   const handlePhoneChange = useCallback((value: string) => {
     setWhatsappNumber(value);
+    setExternalId("");
+    setReceivedAt("");
+    localStorage.removeItem("externalId");
+    localStorage.removeItem("receivedAt");
     setGenericError("");
   }, []);
 
@@ -85,6 +95,8 @@ export default function Home() {
       const result = await validateWhatsAppNumber(whatsappNumber);
       setWhatsappNumber(result.normalizedNumber);
       setMaskedNumber(result.maskedNumber);
+      if (!externalId) setExternalId(window.crypto.randomUUID());
+      if (!receivedAt) setReceivedAt(new Date().toISOString());
       setCurrentStep(1);
     } catch (error) {
       setGenericError(
@@ -93,7 +105,7 @@ export default function Home() {
     } finally {
       setIsValidating(false);
     }
-  }, [isValidating, whatsappNumber]);
+  }, [externalId, isValidating, receivedAt, whatsappNumber]);
 
   const handleNext = useCallback(() => {
     if (currentStep < STEPS.length - 1) {
@@ -112,7 +124,16 @@ export default function Home() {
     setDeliveryStatus("sending");
     setGenericError("");
     try {
-      await sendRecommendation(whatsappNumber, answers);
+      const submissionId = externalId || window.crypto.randomUUID();
+      const submissionTime = receivedAt || new Date().toISOString();
+      if (!externalId) setExternalId(submissionId);
+      if (!receivedAt) setReceivedAt(submissionTime);
+      await sendRecommendation(
+        whatsappNumber,
+        answers,
+        submissionId,
+        submissionTime
+      );
       setDeliveryStatus("success");
       FUNNEL_STORAGE_KEYS.forEach((key) => localStorage.removeItem(key));
     } catch (error) {
@@ -123,7 +144,7 @@ export default function Home() {
           : "We could not send your recommendation. Please try again."
       );
     }
-  }, [answers, deliveryStatus, whatsappNumber]);
+  }, [answers, deliveryStatus, externalId, receivedAt, whatsappNumber]);
 
   const handleRestart = useCallback(() => {
     setCurrentStep(0);
@@ -131,6 +152,8 @@ export default function Home() {
     setUseCase(null);
     setEnvironment(null);
     setSizeCategory(null);
+    setExternalId("");
+    setReceivedAt("");
     setGenericError("");
     setIsValidating(false);
     setDeliveryStatus("idle");

@@ -61,8 +61,15 @@ export function validateWhatsAppNumber(phoneNumber: string) {
 
 export function sendRecommendation(
   phoneNumber: string,
-  answers: PresalesAnswers
+  answers: PresalesAnswers,
+  externalId: string,
+  receivedAt: string
 ) {
-  const request: SendRecommendationRequest = { phoneNumber, ...answers };
+  const request: SendRecommendationRequest = {
+    phoneNumber,
+    externalId,
+    receivedAt,
+    ...answers,
+  };
   return postJson<SendRecommendationResponse>("/api/send-recommendation", request);
 }

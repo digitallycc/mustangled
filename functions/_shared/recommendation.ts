@@ -151,17 +151,26 @@ const SIZE_LABELS: Record<PresalesAnswers["sizeCategory"], string> = {
   not_sure: "Not Sure",
 };
 
+export function getRequirementLabels(input: PresalesAnswers) {
+  return {
+    useCase: USE_CASE_LABELS[input.useCase],
+    environment: ENVIRONMENT_LABELS[input.environment],
+    sizeCategory: SIZE_LABELS[input.sizeCategory],
+  };
+}
+
 export function buildRecommendationMessage(
   input: PresalesAnswers,
   recommendation: Recommendation
 ): string {
+  const labels = getRequirementLabels(input);
   return `Hello from Mustang LED.
 
 Thank you for sharing your screen requirements. Based on your answers:
 
-- Use case: ${USE_CASE_LABELS[input.useCase]}
-- Installation: ${ENVIRONMENT_LABELS[input.environment]}
-- Approximate size: ${SIZE_LABELS[input.sizeCategory]}
+- Use case: ${labels.useCase}
+- Installation: ${labels.environment}
+- Approximate size: ${labels.sizeCategory}
 
 ${recommendation.title}
 

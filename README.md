@@ -8,8 +8,9 @@ Demo deployment: `https://mustangled.pages.dev`
 
 1. `POST /api/validate-number` normalizes the submitted international number and checks it through Evolution API.
 2. The browser collects use case, environment, and approximate size.
-3. `POST /api/send-recommendation` revalidates the number, calculates the recommendation, sends the result text, and then sends `/mustangled.pdf` as a separate whitepaper document.
-4. The UI reports success once the result text succeeds. A later PDF failure is logged but does not change the user-facing result.
+3. `POST /api/send-recommendation` revalidates the number, calculates the recommendation, upserts the lead in Odoo, sends the result text, and then sends `/mustangled.pdf` as a separate whitepaper document.
+4. The lead is upserted again with text and whitepaper delivery status. Odoo failure does not block WhatsApp delivery.
+5. The UI reports success once the result text succeeds. A later PDF failure is logged but does not change the user-facing result.
 
 The browser cannot provide arbitrary WhatsApp message content. Recommendation copy and document metadata are generated inside the Pages Function.
 
@@ -33,6 +34,8 @@ Add these encrypted secrets to both Production and Preview when preview deployme
 EVOLUTION_BASE_URL
 EVOLUTION_API_KEY
 EVOLUTION_INSTANCE
+ODOO_BASE_URL
+ODOO_API_TOKEN
 ```
 
 No Cloudflare resource bindings are currently required.

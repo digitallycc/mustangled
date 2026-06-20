@@ -4,6 +4,13 @@ export interface EvolutionEnv {
   EVOLUTION_INSTANCE: string;
 }
 
+export interface OdooEnv {
+  ODOO_BASE_URL: string;
+  ODOO_API_TOKEN: string;
+}
+
+export interface AppEnv extends EvolutionEnv, OdooEnv {}
+
 export interface PagesFunctionContext<Env> {
   request: Request;
   env: Env;

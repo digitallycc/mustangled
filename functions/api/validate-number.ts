@@ -1,5 +1,5 @@
 import { errorResponse, jsonResponse, readJsonBody, RequestError } from "../_shared/http";
-import { isWhatsAppNumber } from "../_shared/evolution";
+import { getWhatsAppContact } from "../_shared/evolution";
 import { maskPhoneNumber, normalizePhoneNumber } from "../_shared/phone";
 import type { EvolutionEnv, PagesFunction } from "../_shared/types";
 
@@ -9,7 +9,8 @@ export const onRequestPost: PagesFunction<EvolutionEnv> = async ({ request, env 
     const input = body as { phoneNumber?: unknown };
     const normalizedNumber = normalizePhoneNumber(input.phoneNumber);
 
-    if (!(await isWhatsAppNumber(env, normalizedNumber))) {
+    const contact = await getWhatsAppContact(env, normalizedNumber);
+    if (!contact) {
       throw new RequestError(
         422,
         "NOT_ON_WHATSAPP",
@@ -21,6 +22,7 @@ export const onRequestPost: PagesFunction<EvolutionEnv> = async ({ request, env 
       success: true,
       normalizedNumber: `+${normalizedNumber}`,
       maskedNumber: maskPhoneNumber(normalizedNumber),
+      contactName: contact.name || "",
     });
   } catch (error) {
     return errorResponse(error);

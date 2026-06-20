@@ -1,9 +1,10 @@
 import type { EvolutionEnv } from "./types";
 
-interface WhatsAppNumberResult {
+export interface WhatsAppContact {
   exists?: boolean;
   jid?: string;
   number?: string;
+  name?: string;
 }
 
 function getEvolutionConfig(env: EvolutionEnv) {
@@ -47,10 +48,10 @@ async function evolutionRequest(
     : response.text();
 }
 
-export async function isWhatsAppNumber(
+export async function getWhatsAppContact(
   env: EvolutionEnv,
   number: string
-): Promise<boolean> {
+): Promise<WhatsAppContact | null> {
   const config = getEvolutionConfig(env);
   const response = await evolutionRequest(
     env,
@@ -61,7 +62,15 @@ export async function isWhatsAppNumber(
   const results = Array.isArray(response)
     ? response
     : ((response as { value?: unknown[] })?.value ?? []);
-  return Boolean((results[0] as WhatsAppNumberResult | undefined)?.exists);
+  const contact = results[0] as WhatsAppContact | undefined;
+  return contact?.exists ? contact : null;
+}
+
+export async function isWhatsAppNumber(
+  env: EvolutionEnv,
+  number: string
+): Promise<boolean> {
+  return Boolean(await getWhatsAppContact(env, number));
 }
 
 export async function sendTextMessage(

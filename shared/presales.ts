@@ -55,6 +55,8 @@ export interface Recommendation {
 
 export interface SendRecommendationRequest extends PresalesAnswers {
   phoneNumber: string;
+  externalId: string;
+  receivedAt: string;
 }
 
 export function isPresalesAnswers(value: unknown): value is PresalesAnswers {
