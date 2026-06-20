@@ -2,6 +2,8 @@
 
 Mobile-first LED screen qualification flow deployed as a static Next.js site on Cloudflare Pages. Cloudflare Pages Functions validate WhatsApp numbers and send server-calculated recommendations through Evolution API.
 
+Demo deployment: `https://mustangled.pages.dev`
+
 ## Runtime Flow
 
 1. `POST /api/validate-number` normalizes the submitted international number and checks it through Evolution API.
