@@ -38,6 +38,13 @@ export async function upsertOdooLead(
   });
 
   if (!response.ok) {
-    throw new Error(`Odoo lead upsert failed with status ${response.status}.`);
+    const responseBody = (await response.text())
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 1000);
+    const detail = responseBody ? ` Response: ${responseBody}` : "";
+    throw new Error(
+      `Odoo lead upsert failed with status ${response.status}.${detail}`
+    );
   }
 }

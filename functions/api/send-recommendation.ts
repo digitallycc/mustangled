@@ -86,10 +86,11 @@ export const onRequestPost: PagesFunction<AppEnv> = async ({ request, env }) => 
     const recommendation = getRecommendation(input);
     const labels = getRequirementLabels(input);
     const message = buildRecommendationMessage(input, recommendation);
+    const customerName = contact.name?.trim().slice(0, 255);
     const lead: OdooLeadPayload = {
       external_id: input.externalId,
-      customer_name: contact.name?.trim() || `WhatsApp ${normalizedNumber.slice(-4)}`,
-      whatsapp_number: normalizedNumber,
+      customer_name: customerName || `WhatsApp ${normalizedNumber.slice(-4)}`,
+      whatsapp_number: `+${normalizedNumber}`,
       use_case: labels.useCase,
       environment: labels.environment,
       size_category: labels.sizeCategory,
@@ -98,20 +99,18 @@ export const onRequestPost: PagesFunction<AppEnv> = async ({ request, env }) => 
       recommendation_explanation: recommendation.explanation,
       lead_temperature: recommendation.leadTemperature,
       received_at: input.receivedAt,
-      source_url: getSourceUrl(request),
+      source_url: getSourceUrl(request).slice(0, 2048),
       recommendation_sent: false,
       whitepaper_sent: false,
       delivery_error: "",
     };
-
-    let leadCaptured = await captureLead(env, lead);
 
     try {
       await sendTextMessage(env, normalizedNumber, message);
       lead.recommendation_sent = true;
     } catch (error) {
       lead.delivery_error = "The recommendation message could not be sent.";
-      leadCaptured = (await captureLead(env, lead)) || leadCaptured;
+      await captureLead(env, lead);
       throw error;
     }
 
@@ -129,7 +128,7 @@ export const onRequestPost: PagesFunction<AppEnv> = async ({ request, env }) => 
       console.error("Whitepaper delivery failed after recommendation was sent", error);
     }
 
-    leadCaptured = (await captureLead(env, lead)) || leadCaptured;
+    const leadCaptured = await captureLead(env, lead);
     return jsonResponse({ success: true, recommendation, leadCaptured });
   } catch (error) {
     return errorResponse(error);

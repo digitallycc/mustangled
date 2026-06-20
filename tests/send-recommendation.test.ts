@@ -31,7 +31,6 @@ describe("send-recommendation Function", () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(jsonResponse([{ exists: true, name: "Ayesha Khan" }]))
-      .mockResolvedValueOnce(jsonResponse({ id: 42, created: true }))
       .mockResolvedValueOnce(jsonResponse({ key: { id: "text-message" } }))
       .mockResolvedValueOnce(jsonResponse({ key: { id: "document-message" } }))
       .mockResolvedValueOnce(jsonResponse({ id: 42, created: false }));
@@ -53,38 +52,31 @@ describe("send-recommendation Function", () => {
     });
 
     expect(response.status).toBe(200);
-    expect(fetchMock).toHaveBeenCalledTimes(5);
-    expect(String(fetchMock.mock.calls[1][0])).toBe(
+    expect(fetchMock).toHaveBeenCalledTimes(4);
+    expect(String(fetchMock.mock.calls[1][0])).toContain("/message/sendText/");
+    expect(String(fetchMock.mock.calls[2][0])).toContain("/message/sendMedia/");
+    expect(String(fetchMock.mock.calls[3][0])).toBe(
       "https://odoo.example.com/mustang_presales/api/v1/leads"
     );
-    expect(String(fetchMock.mock.calls[2][0])).toContain("/message/sendText/");
-    expect(String(fetchMock.mock.calls[3][0])).toContain("/message/sendMedia/");
 
     const documentBody = JSON.parse(
-      String((fetchMock.mock.calls[3][1] as RequestInit).body)
+      String((fetchMock.mock.calls[2][1] as RequestInit).body)
     );
     expect(documentBody.media).toBe("https://mustangled.com/mustangled.pdf");
     expect(documentBody.mediatype).toBe("document");
     expect(documentBody.caption.toLowerCase()).toContain("whitepaper");
     expect(documentBody.caption.toLowerCase()).not.toContain("catalog");
 
-    const initialOdooRequest = fetchMock.mock.calls[1][1] as RequestInit;
-    expect((initialOdooRequest.headers as Record<string, string>).Authorization).toBe(
+    const odooRequest = fetchMock.mock.calls[3][1] as RequestInit;
+    expect((odooRequest.headers as Record<string, string>).Authorization).toBe(
       "Bearer odoo-test-token"
     );
-    const initialLead = JSON.parse(String(initialOdooRequest.body));
-    expect(initialLead).toMatchObject({
+    const finalLead = JSON.parse(String(odooRequest.body));
+    expect(finalLead).toMatchObject({
       external_id: submission.externalId,
       customer_name: "Ayesha Khan",
-      whatsapp_number: "923123456789",
+      whatsapp_number: "+923123456789",
       use_case: "Shop / Retail",
-      recommendation_sent: false,
-      whitepaper_sent: false,
-    });
-    const finalLead = JSON.parse(
-      String((fetchMock.mock.calls[4][1] as RequestInit).body)
-    );
-    expect(finalLead).toMatchObject({
       recommendation_sent: true,
       whitepaper_sent: true,
       delivery_error: "",
@@ -95,7 +87,6 @@ describe("send-recommendation Function", () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(jsonResponse([{ exists: true }]))
-      .mockResolvedValueOnce(jsonResponse({ id: 42 }))
       .mockResolvedValueOnce(jsonResponse({ key: { id: "text-message" } }))
       .mockResolvedValueOnce(new Response("media failure", { status: 500 }))
       .mockResolvedValueOnce(jsonResponse({ id: 42 }));
@@ -125,7 +116,6 @@ describe("send-recommendation Function", () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(jsonResponse([{ exists: true }]))
-      .mockResolvedValueOnce(jsonResponse({ id: 42 }))
       .mockResolvedValueOnce(jsonResponse({ key: { id: "text-message" } }))
       .mockResolvedValueOnce(jsonResponse({ key: { id: "document-message" } }))
       .mockResolvedValueOnce(jsonResponse({ id: 42 }));
@@ -157,7 +147,6 @@ describe("send-recommendation Function", () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(jsonResponse([{ exists: true }]))
-      .mockResolvedValueOnce(new Response("odoo unavailable", { status: 503 }))
       .mockResolvedValueOnce(jsonResponse({ key: { id: "text-message" } }))
       .mockResolvedValueOnce(jsonResponse({ key: { id: "document-message" } }))
       .mockResolvedValueOnce(new Response("odoo unavailable", { status: 503 }));
