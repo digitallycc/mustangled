@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ProgressIndicator from "@/components/ProgressIndicator";
 import IntroWhatsAppScreen from "@/components/screens/IntroWhatsAppScreen";
 import UseCaseScreen from "@/components/screens/UseCaseScreen";
@@ -30,6 +30,25 @@ const FUNNEL_STORAGE_KEYS = [
   "externalId",
   "receivedAt",
 ];
+const FUNNEL_HISTORY_KEY = "mustangPresalesFunnel";
+
+interface FunnelHistoryState {
+  [FUNNEL_HISTORY_KEY]: true;
+  sessionId: string;
+  step: number;
+}
+
+function isFunnelHistoryState(value: unknown): value is FunnelHistoryState {
+  if (!value || typeof value !== "object") return false;
+  const state = value as Partial<FunnelHistoryState>;
+  return (
+    state[FUNNEL_HISTORY_KEY] === true &&
+    typeof state.sessionId === "string" &&
+    Number.isInteger(state.step) &&
+    (state.step ?? -1) >= 0 &&
+    (state.step ?? STEPS.length) < STEPS.length
+  );
+}
 
 function loadState<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;
@@ -63,6 +82,9 @@ export default function Home() {
   const [deliveryStatus, setDeliveryStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
   const [maskedNumber, setMaskedNumber] = useState("");
   const [genericError, setGenericError] = useState("");
+  const initialStepRef = useRef(currentStep);
+  const historySessionIdRef = useRef("");
+  const deliveryStatusRef = useRef(deliveryStatus);
 
   useEffect(() => { saveState("step", currentStep); }, [currentStep]);
   useEffect(() => { saveState("whatsappNumber", whatsappNumber); }, [whatsappNumber]);
@@ -71,6 +93,23 @@ export default function Home() {
   useEffect(() => { saveState("sizeCategory", sizeCategory); }, [sizeCategory]);
   useEffect(() => { saveState("externalId", externalId); }, [externalId]);
   useEffect(() => { saveState("receivedAt", receivedAt); }, [receivedAt]);
+  useEffect(() => { deliveryStatusRef.current = deliveryStatus; }, [deliveryStatus]);
+
+  const setHistoryStep = useCallback((step: number, mode: "push" | "replace") => {
+    setCurrentStep(step);
+    if (!historySessionIdRef.current) return;
+
+    const state: FunnelHistoryState = {
+      [FUNNEL_HISTORY_KEY]: true,
+      sessionId: historySessionIdRef.current,
+      step,
+    };
+    if (mode === "push") {
+      window.history.pushState(state, "", window.location.href);
+    } else {
+      window.history.replaceState(state, "", window.location.href);
+    }
+  }, []);
 
   const answers: PresalesAnswers | null = useMemo(() => {
     if (!useCase || !environment || !sizeCategory) return null;
@@ -97,7 +136,7 @@ export default function Home() {
       setMaskedNumber(result.maskedNumber);
       if (!externalId) setExternalId(window.crypto.randomUUID());
       if (!receivedAt) setReceivedAt(new Date().toISOString());
-      setCurrentStep(1);
+      setHistoryStep(1, "push");
     } catch (error) {
       setGenericError(
         error instanceof Error ? error.message : "We could not validate that number."
@@ -105,22 +144,35 @@ export default function Home() {
     } finally {
       setIsValidating(false);
     }
-  }, [externalId, isValidating, receivedAt, whatsappNumber]);
+  }, [externalId, isValidating, receivedAt, setHistoryStep, whatsappNumber]);
 
   const handleNext = useCallback(() => {
     if (currentStep < STEPS.length - 1) {
-      setCurrentStep((s) => s + 1);
+      setHistoryStep(currentStep + 1, "push");
     }
-  }, [currentStep]);
+  }, [currentStep, setHistoryStep]);
 
   const handleBack = useCallback(() => {
-    if (currentStep > 0) setCurrentStep((s) => s - 1);
-  }, [currentStep]);
+    if (currentStep <= 0) return;
+
+    const state = window.history.state;
+    if (
+      isFunnelHistoryState(state) &&
+      state.sessionId === historySessionIdRef.current
+    ) {
+      window.history.back();
+      return;
+    }
+
+    setHistoryStep(currentStep - 1, "replace");
+  }, [currentStep, setHistoryStep]);
 
   const handleSendRecommendation = useCallback(async () => {
     if (!answers || deliveryStatus === "sending") return;
 
-    setCurrentStep(STEPS.length - 1);
+    if (currentStep !== STEPS.length - 1) {
+      setHistoryStep(STEPS.length - 1, "push");
+    }
     setDeliveryStatus("sending");
     setGenericError("");
     try {
@@ -144,10 +196,11 @@ export default function Home() {
           : "We could not send your recommendation. Please try again."
       );
     }
-  }, [answers, deliveryStatus, externalId, receivedAt, whatsappNumber]);
+  }, [answers, currentStep, deliveryStatus, externalId, receivedAt, setHistoryStep, whatsappNumber]);
 
   const handleRestart = useCallback(() => {
-    setCurrentStep(0);
+    historySessionIdRef.current = window.crypto.randomUUID();
+    setHistoryStep(0, "replace");
     setWhatsappNumber("");
     setUseCase(null);
     setEnvironment(null);
@@ -159,7 +212,45 @@ export default function Home() {
     setDeliveryStatus("idle");
     setMaskedNumber("");
     FUNNEL_STORAGE_KEYS.forEach((key) => localStorage.removeItem(key));
-  }, []);
+  }, [setHistoryStep]);
+
+  useEffect(() => {
+    const existingState = window.history.state;
+    const restoredStep = initialStepRef.current;
+
+    if (isFunnelHistoryState(existingState)) {
+      historySessionIdRef.current = existingState.sessionId;
+      setHistoryStep(restoredStep, "replace");
+    } else {
+      historySessionIdRef.current = window.crypto.randomUUID();
+      setHistoryStep(0, "replace");
+      for (let step = 1; step <= restoredStep; step += 1) {
+        setHistoryStep(step, "push");
+      }
+    }
+
+    const handlePopState = (event: PopStateEvent) => {
+      const state = event.state;
+
+      if (deliveryStatusRef.current === "success") {
+        handleRestart();
+        return;
+      }
+
+      if (!isFunnelHistoryState(state)) return;
+      if (state.sessionId !== historySessionIdRef.current) {
+        handleRestart();
+        return;
+      }
+
+      const safeStep = state.step === STEPS.length - 1 ? STEPS.length - 2 : state.step;
+      setCurrentStep(safeStep);
+      if (state.step !== safeStep) setHistoryStep(safeStep, "replace");
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [handleRestart, setHistoryStep]);
 
   const showProgress = currentStep >= 0 && currentStep < STEPS.length - 1;
 
@@ -232,7 +323,7 @@ export default function Home() {
             maskedNumber={maskedNumber}
             error={genericError}
             onRetry={handleSendRecommendation}
-            onBack={() => setCurrentStep(3)}
+            onBack={handleBack}
             onRestart={handleRestart}
           />
         </div>
