@@ -1,7 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Image from "next/image";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import ProgressIndicator from "@/components/ProgressIndicator";
 import IntroWhatsAppScreen from "@/components/screens/IntroWhatsAppScreen";
 import UseCaseScreen from "@/components/screens/UseCaseScreen";
@@ -11,17 +10,7 @@ import RecommendationScreen from "@/components/screens/RecommendationScreen";
 import { clientConfig } from "@/config/client";
 import { getRecommendationType, getRecommendationDetails } from "@/lib/recommendation";
 import { calculateLeadScore, getLeadTemperature } from "@/lib/lead-score";
-import { buildWhatsAppUrl, buildPrefilledMessage, getUseCaseLabel, getEnvironmentLabel, getSizeCategoryLabel, submitLead } from "@/lib/whatsapp";
-import {
-  trackFlowStarted,
-  trackWhatsAppEntered,
-  trackUseCaseAnswered,
-  trackEnvironmentAnswered,
-  trackSizeAnswered,
-  trackRecommendationViewed,
-  trackWhatsAppHandoffClicked,
-  trackFlowAbandoned,
-} from "@/lib/analytics";
+import { buildWhatsAppUrl, buildPrefilledMessage, getUseCaseLabel, getEnvironmentLabel, getSizeCategoryLabel } from "@/lib/whatsapp";
 import type { Step, UseCase, Environment, SizeCategory, PresalesInput, Recommendation } from "@/lib/types";
 
 const STEPS: Step[] = ["whatsapp", "use_case", "environment", "size", "recommendation"];
@@ -59,28 +48,11 @@ export default function Home() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [genericError, setGenericError] = useState("");
 
-  const hasTrackedAbandon = useRef(false);
-
   useEffect(() => { saveState("step", currentStep); }, [currentStep]);
   useEffect(() => { saveState("whatsappNumber", whatsappNumber); }, [whatsappNumber]);
   useEffect(() => { saveState("useCase", useCase); }, [useCase]);
   useEffect(() => { saveState("environment", environment); }, [environment]);
   useEffect(() => { saveState("sizeCategory", sizeCategory); }, [sizeCategory]);
-
-  useEffect(() => {
-    trackFlowStarted();
-  }, []);
-
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      if (!hasTrackedAbandon.current && currentStep < STEPS.length - 1) {
-        trackFlowAbandoned(STEPS[currentStep]);
-        hasTrackedAbandon.current = true;
-      }
-    };
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [currentStep]);
 
   const input: PresalesInput | null = useMemo(() => {
     if (!useCase || !environment || !sizeCategory) return null;
@@ -98,7 +70,6 @@ export default function Home() {
       title: details.title,
       explanation: details.explanation,
       suggestedNextStep: details.suggestedNextStep,
-      whatsappMessage: details.whatsappMessage,
       leadScore: score,
       leadTemperature: temperature,
     };
@@ -111,38 +82,17 @@ export default function Home() {
 
   const handleNext = useCallback(() => {
     if (currentStep < STEPS.length - 1) {
-      if (STEPS[currentStep] === "whatsapp") trackWhatsAppEntered(whatsappNumber);
-      if (STEPS[currentStep] === "use_case" && useCase) trackUseCaseAnswered(useCase);
-      if (STEPS[currentStep] === "environment" && environment) trackEnvironmentAnswered(environment);
-      if (STEPS[currentStep] === "size" && sizeCategory) trackSizeAnswered(sizeCategory);
       setCurrentStep((s) => s + 1);
     }
-  }, [currentStep, whatsappNumber, useCase, environment, sizeCategory]);
+  }, [currentStep]);
 
   const handleBack = useCallback(() => {
     if (currentStep > 0) setCurrentStep((s) => s - 1);
   }, [currentStep]);
 
-  const handleWhatsAppHandoff = useCallback(async () => {
+  const handleWhatsAppHandoff = useCallback(() => {
     if (!input || !recommendation) return;
-    setIsSubmitting(true);
     setGenericError("");
-
-    trackWhatsAppHandoffClicked(input, recommendation.type, recommendation.leadScore);
-
-    await submitLead({
-      clientSlug: clientConfig.slug,
-      whatsappNumber: input.whatsappNumber,
-      useCase: input.useCase,
-      environment: input.environment,
-      sizeCategory: input.sizeCategory,
-      recommendationType: recommendation.type,
-      recommendationTitle: recommendation.title,
-      leadScore: recommendation.leadScore,
-      leadTemperature: recommendation.leadTemperature,
-      sourceUrl: typeof window !== "undefined" ? window.location.href : "",
-      createdAt: new Date().toISOString(),
-    });
 
     const message = buildPrefilledMessage({
       useCaseLabel: getUseCaseLabel(input.useCase),
@@ -153,7 +103,6 @@ export default function Home() {
     });
     const url = buildWhatsAppUrl(message);
 
-    setIsSubmitting(false);
     window.open(url, "_blank");
   }, [input, recommendation]);
 
@@ -165,7 +114,9 @@ export default function Home() {
     setSizeCategory(null);
     setGenericError("");
     setIsSubmitting(false);
-    localStorage.clear();
+    ["step", "whatsappNumber", "useCase", "environment", "sizeCategory"].forEach(
+      (key) => localStorage.removeItem(key)
+    );
   }, []);
 
   const showProgress = currentStep >= 0 && currentStep < STEPS.length - 1;

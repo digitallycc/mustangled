@@ -62,27 +62,3 @@ export function getSizeCategoryLabel(sizeCategory: string): string {
   };
   return labels[sizeCategory] || sizeCategory;
 }
-
-export function submitLead(
-  payload: {
-    clientSlug: string;
-    whatsappNumber: string;
-    useCase: string;
-    environment: string;
-    sizeCategory: string;
-    recommendationType: string;
-    recommendationTitle: string;
-    leadScore: number;
-    leadTemperature: "hot" | "warm" | "nurture";
-    sourceUrl: string;
-    createdAt: string;
-  }
-): Promise<{ success: boolean }> {
-  return fetch("/api/lead", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  })
-    .then((res) => res.json())
-    .catch(() => ({ success: false }));
-}

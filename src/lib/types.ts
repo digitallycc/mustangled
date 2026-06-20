@@ -49,21 +49,6 @@ export interface Recommendation {
   title: string;
   explanation: string;
   suggestedNextStep: string;
-  whatsappMessage: string;
   leadScore: number;
   leadTemperature: "hot" | "warm" | "nurture";
-}
-
-export interface LeadPayload {
-  clientSlug: string;
-  whatsappNumber: string;
-  useCase: string;
-  environment: string;
-  sizeCategory: string;
-  recommendationType: string;
-  recommendationTitle: string;
-  leadScore: number;
-  leadTemperature: "hot" | "warm" | "nurture";
-  sourceUrl: string;
-  createdAt: string;
 }
