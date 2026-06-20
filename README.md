@@ -1,36 +1,63 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Mustang LED Presales Flow
 
-## Getting Started
+Mobile-first LED screen qualification flow deployed as a static Next.js site on Cloudflare Pages. Cloudflare Pages Functions validate WhatsApp numbers and send server-calculated recommendations through Evolution API.
 
-First, run the development server:
+## Runtime Flow
+
+1. `POST /api/validate-number` normalizes the submitted international number and checks it through Evolution API.
+2. The browser collects use case, environment, and approximate size.
+3. `POST /api/send-recommendation` revalidates the number, calculates the recommendation, sends the result text, and then sends `/mustangled.pdf` as a separate whitepaper document.
+4. The UI reports success once the result text succeeds. A later PDF failure is logged but does not change the user-facing result.
+
+The browser cannot provide arbitrary WhatsApp message content. Recommendation copy and document metadata are generated inside the Pages Function.
+
+## Cloudflare Configuration
+
+Build command:
+
+```text
+npm run build
+```
+
+Build output directory:
+
+```text
+out
+```
+
+Add these encrypted secrets to both Production and Preview when preview deployments need working API routes:
+
+```text
+EVOLUTION_BASE_URL
+EVOLUTION_API_KEY
+EVOLUTION_INSTANCE
+```
+
+No Cloudflare resource bindings are currently required.
+
+Configure Cloudflare rate limiting for both public routes. Use a stricter limit for `/api/send-recommendation` than `/api/validate-number`, and scope rules to `POST` requests. Exact thresholds should follow the traffic profile and Cloudflare plan.
+
+## Local Development
+
+Copy `.dev.vars.example` to `.dev.vars` and add the local Evolution credentials. `.dev.vars` is ignored by Git.
+
+Run the frontend only:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Run a production-style Pages preview with Functions:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run preview:cf
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Verification
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run lint
+npx tsc --noEmit
+npm test
+npm run build
+```

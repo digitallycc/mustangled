@@ -8,19 +8,26 @@ import EnvironmentScreen from "@/components/screens/EnvironmentScreen";
 import SizeScreen from "@/components/screens/SizeScreen";
 import RecommendationScreen from "@/components/screens/RecommendationScreen";
 import { clientConfig } from "@/config/client";
-import { getRecommendationType, getRecommendationDetails } from "@/lib/recommendation";
-import { calculateLeadScore, getLeadTemperature } from "@/lib/lead-score";
-import { buildWhatsAppUrl, buildPrefilledMessage, getUseCaseLabel, getEnvironmentLabel, getSizeCategoryLabel } from "@/lib/whatsapp";
-import type { Step, UseCase, Environment, SizeCategory, PresalesInput, Recommendation } from "@/lib/types";
+import {
+  sendRecommendation,
+  validateWhatsAppNumber,
+} from "@/lib/presales-api";
+import type {
+  Environment,
+  PresalesAnswers,
+  SizeCategory,
+  Step,
+  UseCase,
+} from "@/lib/types";
 
-const STEPS: Step[] = ["whatsapp", "use_case", "environment", "size", "recommendation"];
-
-function validateWhatsAppNumber(value: string): boolean {
-  const digits = value.replace(/\D/g, "");
-  if (digits.length < 10 || digits.length > 15) return false;
-  const patterns = [/^0[3]\d{9}$/, /^92[3]\d{9}$/, /^\+92[3]\d{9}$/, /^\d{10,15}$/];
-  return patterns.some((p) => p.test(value)) || digits.length >= 11;
-}
+const STEPS: Step[] = ["whatsapp", "use_case", "environment", "size", "delivery"];
+const FUNNEL_STORAGE_KEYS = [
+  "step",
+  "whatsappNumber",
+  "useCase",
+  "environment",
+  "sizeCategory",
+];
 
 function loadState<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;
@@ -40,12 +47,17 @@ function saveState(key: string, value: unknown): void {
 }
 
 export default function Home() {
-  const [currentStep, setCurrentStep] = useState<number>(() => loadState("step", 0));
+  const [currentStep, setCurrentStep] = useState<number>(() => {
+    const savedStep = loadState("step", 0);
+    return savedStep >= STEPS.length - 1 ? STEPS.length - 2 : savedStep;
+  });
   const [whatsappNumber, setWhatsappNumber] = useState<string>(() => loadState("whatsappNumber", ""));
   const [useCase, setUseCase] = useState<UseCase | null>(() => loadState("useCase", null));
   const [environment, setEnvironment] = useState<Environment | null>(() => loadState("environment", null));
   const [sizeCategory, setSizeCategory] = useState<SizeCategory | null>(() => loadState("sizeCategory", null));
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isValidating, setIsValidating] = useState(false);
+  const [deliveryStatus, setDeliveryStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
+  const [maskedNumber, setMaskedNumber] = useState("");
   const [genericError, setGenericError] = useState("");
 
   useEffect(() => { saveState("step", currentStep); }, [currentStep]);
@@ -54,31 +66,34 @@ export default function Home() {
   useEffect(() => { saveState("environment", environment); }, [environment]);
   useEffect(() => { saveState("sizeCategory", sizeCategory); }, [sizeCategory]);
 
-  const input: PresalesInput | null = useMemo(() => {
+  const answers: PresalesAnswers | null = useMemo(() => {
     if (!useCase || !environment || !sizeCategory) return null;
-    return { whatsappNumber, useCase, environment, sizeCategory };
-  }, [whatsappNumber, useCase, environment, sizeCategory]);
+    return { useCase, environment, sizeCategory };
+  }, [useCase, environment, sizeCategory]);
 
-  const recommendation: Recommendation | null = useMemo(() => {
-    if (!input) return null;
-    const type = getRecommendationType(input);
-    const details = getRecommendationDetails(type);
-    const score = calculateLeadScore(input);
-    const temperature = getLeadTemperature(score);
-    return {
-      type: details.type,
-      title: details.title,
-      explanation: details.explanation,
-      suggestedNextStep: details.suggestedNextStep,
-      leadScore: score,
-      leadTemperature: temperature,
-    };
-  }, [input]);
+  const handlePhoneChange = useCallback((value: string) => {
+    setWhatsappNumber(value);
+    setGenericError("");
+  }, []);
 
-  const isWhatsAppValid = useMemo(
-    () => validateWhatsAppNumber(whatsappNumber),
-    [whatsappNumber]
-  );
+  const handleValidateNumber = useCallback(async () => {
+    if (!whatsappNumber.trim() || isValidating) return;
+
+    setIsValidating(true);
+    setGenericError("");
+    try {
+      const result = await validateWhatsAppNumber(whatsappNumber);
+      setWhatsappNumber(result.normalizedNumber);
+      setMaskedNumber(result.maskedNumber);
+      setCurrentStep(1);
+    } catch (error) {
+      setGenericError(
+        error instanceof Error ? error.message : "We could not validate that number."
+      );
+    } finally {
+      setIsValidating(false);
+    }
+  }, [isValidating, whatsappNumber]);
 
   const handleNext = useCallback(() => {
     if (currentStep < STEPS.length - 1) {
@@ -90,21 +105,25 @@ export default function Home() {
     if (currentStep > 0) setCurrentStep((s) => s - 1);
   }, [currentStep]);
 
-  const handleWhatsAppHandoff = useCallback(() => {
-    if (!input || !recommendation) return;
+  const handleSendRecommendation = useCallback(async () => {
+    if (!answers || deliveryStatus === "sending") return;
+
+    setCurrentStep(STEPS.length - 1);
+    setDeliveryStatus("sending");
     setGenericError("");
-
-    const message = buildPrefilledMessage({
-      useCaseLabel: getUseCaseLabel(input.useCase),
-      environmentLabel: getEnvironmentLabel(input.environment),
-      sizeCategoryLabel: getSizeCategoryLabel(input.sizeCategory),
-      recommendationTitle: recommendation.title,
-      whatsappNumber: input.whatsappNumber,
-    });
-    const url = buildWhatsAppUrl(message);
-
-    window.open(url, "_blank");
-  }, [input, recommendation]);
+    try {
+      await sendRecommendation(whatsappNumber, answers);
+      setDeliveryStatus("success");
+      FUNNEL_STORAGE_KEYS.forEach((key) => localStorage.removeItem(key));
+    } catch (error) {
+      setDeliveryStatus("error");
+      setGenericError(
+        error instanceof Error
+          ? error.message
+          : "We could not send your recommendation. Please try again."
+      );
+    }
+  }, [answers, deliveryStatus, whatsappNumber]);
 
   const handleRestart = useCallback(() => {
     setCurrentStep(0);
@@ -113,10 +132,10 @@ export default function Home() {
     setEnvironment(null);
     setSizeCategory(null);
     setGenericError("");
-    setIsSubmitting(false);
-    ["step", "whatsappNumber", "useCase", "environment", "sizeCategory"].forEach(
-      (key) => localStorage.removeItem(key)
-    );
+    setIsValidating(false);
+    setDeliveryStatus("idle");
+    setMaskedNumber("");
+    FUNNEL_STORAGE_KEYS.forEach((key) => localStorage.removeItem(key));
   }, []);
 
   const showProgress = currentStep >= 0 && currentStep < STEPS.length - 1;
@@ -129,12 +148,12 @@ export default function Home() {
         <div key={screenKey} className="animate-slide-in flex-1 flex flex-col">
           <IntroWhatsAppScreen
             whatsappNumber={whatsappNumber}
-            onWhatsAppChange={setWhatsappNumber}
-            onNext={handleNext}
-            isValid={isWhatsAppValid}
+            onWhatsAppChange={handlePhoneChange}
+            onNext={handleValidateNumber}
+            canContinue={Boolean(whatsappNumber.trim())}
             error={genericError}
             privacyReassurance="Your number is only used to send your recommendation. No spam."
-            isSubmitting={isSubmitting}
+            isSubmitting={isValidating}
           />
         </div>
       );
@@ -174,7 +193,7 @@ export default function Home() {
           <SizeScreen
             selectedSize={sizeCategory}
             onSizeChange={setSizeCategory}
-            onNext={handleNext}
+            onNext={handleSendRecommendation}
             onBack={handleBack}
             reassurance="Don't worry — just pick the closest option. We'll figure out the rest together."
           />
@@ -182,15 +201,16 @@ export default function Home() {
       );
     }
 
-    if (currentStep === 4 && recommendation && input) {
+    if (currentStep === 4) {
       return (
         <div key={screenKey} className="animate-fade-in flex-1 flex flex-col">
           <RecommendationScreen
-            input={input}
-            recommendation={recommendation}
-            onWhatsAppHandoff={handleWhatsAppHandoff}
+            status={deliveryStatus}
+            maskedNumber={maskedNumber}
+            error={genericError}
+            onRetry={handleSendRecommendation}
+            onBack={() => setCurrentStep(3)}
             onRestart={handleRestart}
-            isSubmitting={isSubmitting}
           />
         </div>
       );

@@ -1,8 +1,3 @@
 EVOLUTION_BASE_URL="https://evolution.example.com"
 EVOLUTION_API_KEY="replace-with-evolution-api-key"
 EVOLUTION_INSTANCE="replace-with-evolution-instance"
-
-ODOO_BASE_URL="https://odoo.example.com"
-ODOO_DATABASE="replace-with-odoo-database"
-ODOO_USERNAME="replace-with-odoo-username"
-ODOO_API_KEY="replace-with-odoo-api-key"

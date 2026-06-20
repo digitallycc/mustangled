@@ -1,13 +1,12 @@
 "use client";
 
-import { useState } from "react";
 import { clientConfig } from "@/config/client";
 
 interface IntroWhatsAppScreenProps {
   whatsappNumber: string;
   onWhatsAppChange: (value: string) => void;
   onNext: () => void;
-  isValid: boolean;
+  canContinue: boolean;
   error: string;
   privacyReassurance: string;
   isSubmitting: boolean;
@@ -17,35 +16,15 @@ export default function IntroWhatsAppScreen({
   whatsappNumber,
   onWhatsAppChange,
   onNext,
-  isValid,
+  canContinue,
   error,
   privacyReassurance,
   isSubmitting,
 }: IntroWhatsAppScreenProps) {
-  const [touched, setTouched] = useState(false);
-  const [inputError, setInputError] = useState("");
-
   const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    onWhatsAppChange(value);
-    if (inputError) setInputError("");
-    if (touched) setTouched(false);
+    onWhatsAppChange(e.target.value);
   };
-
-  const handleBlur = () => {
-    setTouched(true);
-    if (!whatsappNumber.trim()) {
-      setInputError("Please enter your WhatsApp number to continue.");
-    } else if (!isValid) {
-      setInputError(
-        "That doesn't look like a valid number. Please include your country code (e.g. +1 234 567 8900)."
-      );
-    } else {
-      setInputError("");
-    }
-  };
-
-  const displayError = inputError || error;
+  const displayError = error;
 
   return (
     <div className="flex-1 flex flex-col">
@@ -81,20 +60,20 @@ export default function IntroWhatsAppScreen({
 
           <div className="relative">
             <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none">
-              <span className="text-base">🇵🇰</span>
+              <span className="text-base font-semibold text-gray-500">+</span>
               <div className="w-px h-4 bg-gray-300" />
             </div>
             <input
               id="whatsapp-number"
               type="tel"
+              inputMode="tel"
               autoComplete="tel"
               value={whatsappNumber}
               onChange={handleInput}
-              onBlur={handleBlur}
               onKeyDown={(e) =>
-                e.key === "Enter" && isValid && !isSubmitting && onNext()
+                e.key === "Enter" && canContinue && !isSubmitting && onNext()
               }
-              placeholder="3XX XXX XXXX"
+              placeholder="92 3XX XXX XXXX"
               disabled={isSubmitting}
               className={`w-full pl-16 pr-4 py-[14px] text-base border-2 rounded-2xl bg-white
                 ${displayError ? "border-red-400 bg-red-50/50" : "border-gray-200"}
@@ -109,7 +88,7 @@ export default function IntroWhatsAppScreen({
               id="whatsapp-hint"
               className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-xs font-medium"
             >
-              {isValid && whatsappNumber ? "✓" : "Country code"}
+              Country code
             </span>
           </div>
 
@@ -155,17 +134,17 @@ export default function IntroWhatsAppScreen({
         <div className="max-w-md mx-auto">
           <button
             onClick={onNext}
-            disabled={!isValid || isSubmitting}
+            disabled={!canContinue || isSubmitting}
             className="w-full py-[14px] px-6 text-base font-semibold text-white rounded-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation flex items-center justify-center gap-2 btn-primary"
             style={{ backgroundColor: clientConfig.brandPrimaryColor }}
           >
             {isSubmitting ? (
               <>
                 <span className="inline-block w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Finding the right screen for you...
+                Checking your WhatsApp number...
               </>
             ) : (
-              "Get My Recommendation"
+              "Continue"
             )}
           </button>
         </div>
