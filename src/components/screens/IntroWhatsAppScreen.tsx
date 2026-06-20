@@ -22,7 +22,7 @@ export default function IntroWhatsAppScreen({
   isSubmitting,
 }: IntroWhatsAppScreenProps) {
   const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onWhatsAppChange(e.target.value);
+    onWhatsAppChange(e.target.value.replace(/\D/g, ""));
   };
   const displayError = error;
 
@@ -66,7 +66,8 @@ export default function IntroWhatsAppScreen({
             <input
               id="whatsapp-number"
               type="tel"
-              inputMode="tel"
+              inputMode="numeric"
+              pattern="[0-9]*"
               autoComplete="tel"
               value={whatsappNumber}
               onChange={handleInput}
@@ -126,6 +127,9 @@ export default function IntroWhatsAppScreen({
               />
             </svg>
             {privacyReassurance}
+          </p>
+          <p className="mt-2 text-xs text-gray-400">
+            Use your country code, or start with 03 for a Pakistani mobile number.
           </p>
         </div>
       </div>

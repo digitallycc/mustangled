@@ -12,14 +12,14 @@ export function normalizePhoneNumber(input: unknown): string {
   const digits = candidate.replace(/\D/g, "");
   if (/^03\d{9}$/.test(digits)) {
     candidate = `+92${digits.slice(1)}`;
-  } else if (/^923\d{9}$/.test(digits)) {
-    candidate = `+${digits}`;
-  } else if (!candidate.startsWith("+")) {
+  } else if (digits.startsWith("0")) {
     throw new RequestError(
       400,
       "INVALID_NUMBER",
-      "Please include the international country code, for example +44 or +92."
+      "That number is not valid. Check the digits and country code."
     );
+  } else if (!candidate.startsWith("+")) {
+    candidate = `+${digits}`;
   }
 
   const parsed = parsePhoneNumberFromString(candidate);
@@ -27,7 +27,7 @@ export function normalizePhoneNumber(input: unknown): string {
     throw new RequestError(
       400,
       "INVALID_NUMBER",
-      "That does not look like a valid international phone number."
+      "That number is not valid. Check the digits and country code."
     );
   }
 

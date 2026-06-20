@@ -17,10 +17,23 @@ describe("normalizePhoneNumber", () => {
 
   it("accepts the international 00 prefix", () => {
     expect(normalizePhoneNumber("0044 7911 123456")).toBe("447911123456");
+    expect(normalizePhoneNumber("00923315550505")).toBe("923315550505");
   });
 
-  it("rejects international numbers without a plus or 00 prefix", () => {
-    expect(() => normalizePhoneNumber("447911123456")).toThrow(RequestError);
+  it("accepts digit-only international numbers because the UI owns the plus prefix", () => {
+    expect(normalizePhoneNumber("447911123456")).toBe("447911123456");
+  });
+
+  it("uses a neutral validity error for invalid leading-zero numbers", () => {
+    expect.assertions(2);
+    try {
+      normalizePhoneNumber("085355550505");
+    } catch (error) {
+      expect(error).toBeInstanceOf(RequestError);
+      expect((error as RequestError).message).toBe(
+        "That number is not valid. Check the digits and country code."
+      );
+    }
   });
 
   it("masks all but the final four digits", () => {
