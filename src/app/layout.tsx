@@ -10,9 +10,33 @@ export const viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Mustang LED | Screen Recommendation",
+  metadataBase: new URL("https://mustangled.aitechworx.com"),
+  title: "Mustang LED | SMD Screen Advisor",
   description:
-    "Find the right LED screen for your space. Answer 3 quick questions and get a recommendation on WhatsApp.",
+    "Answer three quick questions and receive a personalized SMD screen recommendation from Mustang LED on WhatsApp.",
+  openGraph: {
+    title: "Find the Right SMD Screen | Mustang LED",
+    description:
+      "Answer three quick questions and receive a personalized SMD screen recommendation from Mustang LED on WhatsApp.",
+    url: "/",
+    siteName: "Mustang LED",
+    type: "website",
+    images: [
+      {
+        url: "/mustangled.jpg",
+        width: 1024,
+        height: 1024,
+        alt: "Mustang LED SMD display installation",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Find the Right SMD Screen | Mustang LED",
+    description:
+      "Answer three quick questions and receive a personalized SMD screen recommendation from Mustang LED on WhatsApp.",
+    images: ["/mustangled.jpg"],
+  },
 };
 
 export default function RootLayout({
