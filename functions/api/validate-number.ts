@@ -9,7 +9,9 @@ export const onRequestPost: PagesFunction<EvolutionEnv> = async ({ request, env 
     const input = body as { phoneNumber?: unknown };
     const normalizedNumber = normalizePhoneNumber(input.phoneNumber);
 
-    const contact = await getWhatsAppContact(env, normalizedNumber);
+    const contact = await getWhatsAppContact(env, normalizedNumber, {
+      resolveName: false,
+    });
     if (!contact) {
       throw new RequestError(
         422,

@@ -87,6 +87,11 @@ describe("send-recommendation Function", () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(jsonResponse([{ exists: true }]))
+      .mockResolvedValueOnce(jsonResponse({ isBusiness: false }))
+      .mockResolvedValueOnce(jsonResponse({ name: null }))
+      .mockResolvedValueOnce(jsonResponse([]))
+      .mockResolvedValueOnce(jsonResponse(null))
+      .mockResolvedValueOnce(jsonResponse([]))
       .mockResolvedValueOnce(jsonResponse({ key: { id: "text-message" } }))
       .mockResolvedValueOnce(new Response("media failure", { status: 500 }))
       .mockResolvedValueOnce(jsonResponse({ id: 42 }));
@@ -116,6 +121,11 @@ describe("send-recommendation Function", () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(jsonResponse([{ exists: true }]))
+      .mockResolvedValueOnce(jsonResponse({ isBusiness: false }))
+      .mockResolvedValueOnce(jsonResponse({ name: null }))
+      .mockResolvedValueOnce(jsonResponse([]))
+      .mockResolvedValueOnce(jsonResponse(null))
+      .mockResolvedValueOnce(jsonResponse([]))
       .mockResolvedValueOnce(jsonResponse({ key: { id: "text-message" } }))
       .mockResolvedValueOnce(jsonResponse({ key: { id: "document-message" } }))
       .mockResolvedValueOnce(jsonResponse({ id: 42 }));
@@ -147,6 +157,11 @@ describe("send-recommendation Function", () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(jsonResponse([{ exists: true }]))
+      .mockResolvedValueOnce(jsonResponse({ isBusiness: false }))
+      .mockResolvedValueOnce(jsonResponse({ name: null }))
+      .mockResolvedValueOnce(jsonResponse([]))
+      .mockResolvedValueOnce(jsonResponse(null))
+      .mockResolvedValueOnce(jsonResponse([]))
       .mockResolvedValueOnce(jsonResponse({ key: { id: "text-message" } }))
       .mockResolvedValueOnce(jsonResponse({ key: { id: "document-message" } }))
       .mockResolvedValueOnce(new Response("odoo unavailable", { status: 503 }));
