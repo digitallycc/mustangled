@@ -33,7 +33,7 @@ export default function SizeScreen({
   reassurance,
 }: SizeScreenProps) {
   return (
-    <div className="flex-1 flex flex-col">
+    <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
       <div className="flex-shrink-0 px-6 pt-6 text-center">
         <h1 className="text-2xl font-bold text-gray-900 mb-2 animate-float-up">
           Roughly how big should it be?
@@ -69,7 +69,7 @@ export default function SizeScreen({
         </div>
       </div>
 
-      <div className="flex-shrink-0 px-6 pb-5 pt-2">
+      <div className="funnel-actions flex-shrink-0 px-6 pt-2">
         <div className="max-w-md mx-auto">
           <p className="text-xs text-gray-500 text-center flex items-center justify-center gap-1.5 mb-3">
             <svg className="w-4 h-4 flex-shrink-0 text-green-500" fill="currentColor" viewBox="0 0 20 20">

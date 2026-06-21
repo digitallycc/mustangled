@@ -14,7 +14,7 @@ export default function ProgressIndicator({
   const percentage = ((currentStep + 1) / totalSteps) * 100;
 
   return (
-    <div className="px-6 py-4 max-w-xl mx-auto w-full" role="progressbar" aria-valuenow={currentStep + 1} aria-valuemin={1} aria-valuemax={totalSteps} aria-label="Flow progress">
+    <div className="flex-shrink-0 px-6 py-4 max-w-xl mx-auto w-full" role="progressbar" aria-valuenow={currentStep + 1} aria-valuemin={1} aria-valuemax={totalSteps} aria-label="Flow progress">
       <div className="flex items-center gap-3 mb-2">
         <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
           <div

@@ -275,7 +275,7 @@ export default function Home() {
 
     if (currentStep === 0) {
       return (
-        <div key={screenKey} className="animate-slide-in flex-1 flex flex-col">
+        <div key={screenKey} className="animate-slide-in flex-1 min-h-0 flex flex-col">
           <IntroWhatsAppScreen
             whatsappNumber={whatsappNumber}
             onWhatsAppChange={handlePhoneChange}
@@ -291,7 +291,7 @@ export default function Home() {
 
     if (currentStep === 1) {
       return (
-        <div key={screenKey} className="animate-slide-in flex-1 flex flex-col">
+        <div key={screenKey} className="animate-slide-in flex-1 min-h-0 flex flex-col">
           <UseCaseScreen
             selectedUseCase={useCase}
             onUseCaseChange={setUseCase}
@@ -305,7 +305,7 @@ export default function Home() {
 
     if (currentStep === 2) {
       return (
-        <div key={screenKey} className="animate-slide-in flex-1 flex flex-col">
+        <div key={screenKey} className="animate-slide-in flex-1 min-h-0 flex flex-col">
           <EnvironmentScreen
             selectedEnvironment={environment}
             onEnvironmentChange={setEnvironment}
@@ -319,7 +319,7 @@ export default function Home() {
 
     if (currentStep === 3) {
       return (
-        <div key={screenKey} className="animate-slide-in flex-1 flex flex-col">
+        <div key={screenKey} className="animate-slide-in flex-1 min-h-0 flex flex-col">
           <SizeScreen
             selectedSize={sizeCategory}
             onSizeChange={setSizeCategory}
@@ -333,7 +333,7 @@ export default function Home() {
 
     if (currentStep === 4) {
       return (
-        <div key={screenKey} className="animate-fade-in flex-1 flex flex-col">
+        <div key={screenKey} className="animate-fade-in flex-1 min-h-0 flex flex-col">
           <RecommendationScreen
             status={deliveryStatus}
             maskedNumber={maskedNumber}
@@ -350,9 +350,9 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-dvh flex flex-col">
+    <main className="h-dvh min-h-0 overflow-hidden flex flex-col">
       <header
-        className="flex items-center justify-between px-6 py-4 max-w-xl mx-auto w-full header-shadow"
+        className="flex-shrink-0 flex items-center justify-between px-6 py-4 max-w-xl mx-auto w-full header-shadow"
         style={{ minHeight: "56px" }}
       >
         <div className="flex items-center gap-3">
@@ -380,7 +380,7 @@ export default function Home() {
         />
       )}
 
-      <div className="flex-1 flex flex-col relative overflow-hidden">
+      <div className="flex-1 min-h-0 flex flex-col relative overflow-hidden">
         {renderScreen()}
       </div>
     </main>

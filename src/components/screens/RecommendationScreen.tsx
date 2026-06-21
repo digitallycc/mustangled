@@ -39,7 +39,7 @@ export default function RecommendationScreen({
       : error || "Please try again. Your answers have been kept.";
 
   return (
-    <div className="flex-1 flex flex-col">
+    <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
       <div className="flex-1 flex items-center px-6 py-8">
         <div className="max-w-md mx-auto w-full text-center">
           <div
@@ -102,7 +102,7 @@ export default function RecommendationScreen({
         </div>
       </div>
 
-      <div className="flex-shrink-0 px-6 pb-5 pt-2">
+      <div className="funnel-actions flex-shrink-0 px-6 pt-2">
         <div className="max-w-md mx-auto space-y-2.5">
           {status === "error" && (
             <>

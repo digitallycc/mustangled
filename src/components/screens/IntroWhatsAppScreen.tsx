@@ -27,7 +27,7 @@ export default function IntroWhatsAppScreen({
   const displayError = error;
 
   return (
-    <div className="flex-1 flex flex-col">
+    <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
       <div className="flex-shrink-0 hero-gradient rounded-b-3xl mx-4 mt-0 mb-4 pt-6 pb-8 px-6 text-center relative overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 rounded-full opacity-20 blur-3xl" style={{ background: clientConfig.brandPrimaryColor }} />
         <div className="relative z-10">
@@ -134,7 +134,7 @@ export default function IntroWhatsAppScreen({
         </div>
       </div>
 
-      <div className="flex-shrink-0 px-6 pb-5 pt-2">
+      <div className="funnel-actions flex-shrink-0 px-6 pt-2">
         <div className="max-w-md mx-auto">
           <button
             onClick={onNext}

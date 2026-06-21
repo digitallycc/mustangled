@@ -230,6 +230,10 @@ button {
     0 2px 8px -2px rgba(37, 211, 102, 0.1);
 }
 
+.funnel-actions {
+  padding-bottom: max(1.25rem, env(safe-area-inset-bottom));
+}
+
 .stagger-1 { animation-delay: 50ms; }
 .stagger-2 { animation-delay: 100ms; }
 .stagger-3 { animation-delay: 150ms; }
