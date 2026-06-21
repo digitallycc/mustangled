@@ -72,7 +72,9 @@ export default function Home() {
     const savedStep = loadState("step", 0);
     return savedStep >= STEPS.length - 1 ? STEPS.length - 2 : savedStep;
   });
-  const [whatsappNumber, setWhatsappNumber] = useState<string>(() => loadState("whatsappNumber", ""));
+  const [whatsappNumber, setWhatsappNumber] = useState<string>(() =>
+    loadState<string>("whatsappNumber", "").replace(/\D/g, "")
+  );
   const [useCase, setUseCase] = useState<UseCase | null>(() => loadState("useCase", null));
   const [environment, setEnvironment] = useState<Environment | null>(() => loadState("environment", null));
   const [sizeCategory, setSizeCategory] = useState<SizeCategory | null>(() => loadState("sizeCategory", null));
@@ -81,7 +83,8 @@ export default function Home() {
   const [isValidating, setIsValidating] = useState(false);
   const [deliveryStatus, setDeliveryStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
   const [maskedNumber, setMaskedNumber] = useState("");
-  const [genericError, setGenericError] = useState("");
+  const [phoneError, setPhoneError] = useState("");
+  const [deliveryError, setDeliveryError] = useState("");
   const initialStepRef = useRef(currentStep);
   const historySessionIdRef = useRef("");
   const deliveryStatusRef = useRef(deliveryStatus);
@@ -122,23 +125,23 @@ export default function Home() {
     setReceivedAt("");
     localStorage.removeItem("externalId");
     localStorage.removeItem("receivedAt");
-    setGenericError("");
+    setPhoneError("");
   }, []);
 
   const handleValidateNumber = useCallback(async () => {
     if (!whatsappNumber.trim() || isValidating) return;
 
     setIsValidating(true);
-    setGenericError("");
+    setPhoneError("");
     try {
       const result = await validateWhatsAppNumber(whatsappNumber);
-      setWhatsappNumber(result.normalizedNumber);
+      setWhatsappNumber(result.normalizedNumber.replace(/\D/g, ""));
       setMaskedNumber(result.maskedNumber);
       if (!externalId) setExternalId(window.crypto.randomUUID());
       if (!receivedAt) setReceivedAt(new Date().toISOString());
       setHistoryStep(1, "push");
     } catch (error) {
-      setGenericError(
+      setPhoneError(
         error instanceof Error ? error.message : "We could not validate that number."
       );
     } finally {
@@ -173,8 +176,9 @@ export default function Home() {
     if (currentStep !== STEPS.length - 1) {
       setHistoryStep(STEPS.length - 1, "push");
     }
+    deliveryStatusRef.current = "sending";
     setDeliveryStatus("sending");
-    setGenericError("");
+    setDeliveryError("");
     try {
       const submissionId = externalId || window.crypto.randomUUID();
       const submissionTime = receivedAt || new Date().toISOString();
@@ -186,11 +190,15 @@ export default function Home() {
         submissionId,
         submissionTime
       );
+      deliveryStatusRef.current = "success";
       setDeliveryStatus("success");
+      // Keep Back on this document so the completed funnel can reset safely.
+      setHistoryStep(STEPS.length - 1, "push");
       FUNNEL_STORAGE_KEYS.forEach((key) => localStorage.removeItem(key));
     } catch (error) {
+      deliveryStatusRef.current = "error";
       setDeliveryStatus("error");
-      setGenericError(
+      setDeliveryError(
         error instanceof Error
           ? error.message
           : "We could not send your recommendation. Please try again."
@@ -207,8 +215,10 @@ export default function Home() {
     setSizeCategory(null);
     setExternalId("");
     setReceivedAt("");
-    setGenericError("");
+    setPhoneError("");
+    setDeliveryError("");
     setIsValidating(false);
+    deliveryStatusRef.current = "idle";
     setDeliveryStatus("idle");
     setMaskedNumber("");
     FUNNEL_STORAGE_KEYS.forEach((key) => localStorage.removeItem(key));
@@ -232,6 +242,11 @@ export default function Home() {
     const handlePopState = (event: PopStateEvent) => {
       const state = event.state;
 
+      if (deliveryStatusRef.current === "sending") {
+        setHistoryStep(STEPS.length - 1, "push");
+        return;
+      }
+
       if (deliveryStatusRef.current === "success") {
         handleRestart();
         return;
@@ -244,6 +259,7 @@ export default function Home() {
       }
 
       const safeStep = state.step === STEPS.length - 1 ? STEPS.length - 2 : state.step;
+      if (safeStep === 0) setPhoneError("");
       setCurrentStep(safeStep);
       if (state.step !== safeStep) setHistoryStep(safeStep, "replace");
     };
@@ -265,7 +281,7 @@ export default function Home() {
             onWhatsAppChange={handlePhoneChange}
             onNext={handleValidateNumber}
             canContinue={Boolean(whatsappNumber.trim())}
-            error={genericError}
+            error={phoneError}
             privacyReassurance="Your number is only used to send your recommendation. No spam."
             isSubmitting={isValidating}
           />
@@ -321,7 +337,7 @@ export default function Home() {
           <RecommendationScreen
             status={deliveryStatus}
             maskedNumber={maskedNumber}
-            error={genericError}
+            error={deliveryError}
             onRetry={handleSendRecommendation}
             onBack={handleBack}
             onRestart={handleRestart}
