@@ -92,6 +92,7 @@ describe("send-recommendation Function", () => {
       .mockResolvedValueOnce(jsonResponse([]))
       .mockResolvedValueOnce(jsonResponse(null))
       .mockResolvedValueOnce(jsonResponse([]))
+      .mockResolvedValueOnce(jsonResponse({ messages: { records: [] } }))
       .mockResolvedValueOnce(jsonResponse({ key: { id: "text-message" } }))
       .mockResolvedValueOnce(new Response("media failure", { status: 500 }))
       .mockResolvedValueOnce(jsonResponse({ id: 42 }));
@@ -115,6 +116,10 @@ describe("send-recommendation Function", () => {
 
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toMatchObject({ success: true });
+    const odooLead = JSON.parse(
+      String((fetchMock.mock.calls[9][1] as RequestInit).body)
+    );
+    expect(odooLead.customer_name).toBe("WhatsApp 6789");
   });
 
   it("supports a normalized international number returned by validation", async () => {
@@ -126,6 +131,7 @@ describe("send-recommendation Function", () => {
       .mockResolvedValueOnce(jsonResponse([]))
       .mockResolvedValueOnce(jsonResponse(null))
       .mockResolvedValueOnce(jsonResponse([]))
+      .mockResolvedValueOnce(jsonResponse({ messages: { records: [] } }))
       .mockResolvedValueOnce(jsonResponse({ key: { id: "text-message" } }))
       .mockResolvedValueOnce(jsonResponse({ key: { id: "document-message" } }))
       .mockResolvedValueOnce(jsonResponse({ id: 42 }));
@@ -162,6 +168,7 @@ describe("send-recommendation Function", () => {
       .mockResolvedValueOnce(jsonResponse([]))
       .mockResolvedValueOnce(jsonResponse(null))
       .mockResolvedValueOnce(jsonResponse([]))
+      .mockResolvedValueOnce(jsonResponse({ messages: { records: [] } }))
       .mockResolvedValueOnce(jsonResponse({ key: { id: "text-message" } }))
       .mockResolvedValueOnce(jsonResponse({ key: { id: "document-message" } }))
       .mockResolvedValueOnce(new Response("odoo unavailable", { status: 503 }));

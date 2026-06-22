@@ -58,16 +58,31 @@ describe("Evolution contact name resolution", () => {
         jsonResponse([
           {
             pushName: null,
-            lastMessage: { pushName: "Ayesha Khan" },
+            lastMessage: {
+              key: { fromMe: true },
+              pushName: "Você",
+            },
           },
         ])
+      )
+      .mockResolvedValueOnce(
+        jsonResponse({
+          messages: {
+            records: [
+              {
+                key: { fromMe: false },
+                pushName: "Ayesha Khan",
+              },
+            ],
+          },
+        })
       );
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(getWhatsAppContact(env, "923123456789")).resolves.toMatchObject({
       name: "Ayesha Khan",
     });
-    expect(fetchMock).toHaveBeenCalledTimes(6);
+    expect(fetchMock).toHaveBeenCalledTimes(7);
     expect(fetchMock.mock.calls.map(([url]) => String(url))).toEqual([
       "https://evolution.example.com/chat/whatsappNumbers/test-instance",
       "https://evolution.example.com/chat/fetchBusinessProfile/test-instance",
@@ -75,6 +90,7 @@ describe("Evolution contact name resolution", () => {
       "https://evolution.example.com/chat/findContacts/test-instance",
       "https://evolution.example.com/chat/findChatByRemoteJid/test-instance?remoteJid=923123456789%40s.whatsapp.net",
       "https://evolution.example.com/chat/findChats/test-instance",
+      "https://evolution.example.com/chat/findMessages/test-instance",
     ]);
   });
 

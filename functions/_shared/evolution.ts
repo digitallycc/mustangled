@@ -130,6 +130,7 @@ async function resolveWhatsAppName(
     contactsResponse,
     chatResponse,
     chatsResponse,
+    messagesResponse,
   ] =
     await Promise.all([
       optionalEvolutionRequest(
@@ -152,17 +153,37 @@ async function resolveWhatsAppName(
       optionalEvolutionRequest(env, `/chat/findChats/${config.instance}`, {
         where: { remoteJid: jid },
       }),
+      optionalEvolutionRequest(env, `/chat/findMessages/${config.instance}`, {
+        where: { key: { remoteJid: jid } },
+        limit: 50,
+        page: 1,
+      }),
     ]);
 
   const chat = firstRecord(chatsResponse);
   const lastMessage = asRecord(chat?.lastMessage);
+  const lastMessageKey = asRecord(lastMessage?.key);
+  const incomingLastMessage =
+    lastMessageKey?.fromMe === false ? lastMessage : null;
+  const messagesEnvelope = asRecord(messagesResponse);
+  const messages = asRecord(messagesEnvelope?.messages);
+  const messageRecords = Array.isArray(messages?.records)
+    ? messages.records
+        .map(asRecord)
+        .filter((record): record is UnknownRecord => Boolean(record))
+    : [];
+  const incomingMessages = messageRecords.filter((message) => {
+    const key = asRecord(message.key);
+    return key?.fromMe === false;
+  });
   const records = [
     firstRecord(businessResponse),
     firstRecord(profileResponse),
     firstRecord(contactsResponse),
     firstRecord(chatResponse),
     chat,
-    lastMessage,
+    incomingLastMessage,
+    ...incomingMessages,
   ];
 
   for (const record of records) {
