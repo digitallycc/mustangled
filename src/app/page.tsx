@@ -12,6 +12,11 @@ import {
   sendRecommendation,
   validateWhatsAppNumber,
 } from "@/lib/presales-api";
+import {
+  ENVIRONMENTS,
+  SIZE_CATEGORIES,
+  USE_CASES,
+} from "../../shared/presales";
 import type {
   Environment,
   PresalesAnswers,
@@ -50,14 +55,42 @@ function isFunnelHistoryState(value: unknown): value is FunnelHistoryState {
   );
 }
 
-function loadState<T>(key: string, fallback: T): T {
-  if (typeof window === "undefined") return fallback;
+function loadState(key: string): unknown {
+  if (typeof window === "undefined") return undefined;
   try {
     const stored = localStorage.getItem(key);
-    return stored ? JSON.parse(stored) : fallback;
+    return stored ? JSON.parse(stored) : undefined;
   } catch {
-    return fallback;
+    return undefined;
   }
+}
+
+function loadStringState(key: string, fallback = ""): string {
+  const value = loadState(key);
+  return typeof value === "string" ? value : fallback;
+}
+
+function loadStepState(key: string): number {
+  const value = loadState(key);
+  if (
+    typeof value !== "number" ||
+    !Number.isInteger(value) ||
+    value < 0 ||
+    value >= STEPS.length
+  ) {
+    return 0;
+  }
+  return value >= STEPS.length - 1 ? STEPS.length - 2 : value;
+}
+
+function loadEnumState<T extends string>(
+  key: string,
+  allowedValues: readonly T[]
+): T | null {
+  const value = loadState(key);
+  return typeof value === "string" && (allowedValues as readonly string[]).includes(value)
+    ? (value as T)
+    : null;
 }
 
 function saveState(key: string, value: unknown): void {
@@ -69,17 +102,22 @@ function saveState(key: string, value: unknown): void {
 
 export default function Home() {
   const [currentStep, setCurrentStep] = useState<number>(() => {
-    const savedStep = loadState("step", 0);
-    return savedStep >= STEPS.length - 1 ? STEPS.length - 2 : savedStep;
+    return loadStepState("step");
   });
   const [whatsappNumber, setWhatsappNumber] = useState<string>(() =>
-    loadState<string>("whatsappNumber", "").replace(/\D/g, "")
+    loadStringState("whatsappNumber").replace(/\D/g, "")
   );
-  const [useCase, setUseCase] = useState<UseCase | null>(() => loadState("useCase", null));
-  const [environment, setEnvironment] = useState<Environment | null>(() => loadState("environment", null));
-  const [sizeCategory, setSizeCategory] = useState<SizeCategory | null>(() => loadState("sizeCategory", null));
-  const [externalId, setExternalId] = useState<string>(() => loadState("externalId", ""));
-  const [receivedAt, setReceivedAt] = useState<string>(() => loadState("receivedAt", ""));
+  const [useCase, setUseCase] = useState<UseCase | null>(() =>
+    loadEnumState("useCase", USE_CASES)
+  );
+  const [environment, setEnvironment] = useState<Environment | null>(() =>
+    loadEnumState("environment", ENVIRONMENTS)
+  );
+  const [sizeCategory, setSizeCategory] = useState<SizeCategory | null>(() =>
+    loadEnumState("sizeCategory", SIZE_CATEGORIES)
+  );
+  const [externalId, setExternalId] = useState<string>(() => loadStringState("externalId"));
+  const [receivedAt, setReceivedAt] = useState<string>(() => loadStringState("receivedAt"));
   const [isValidating, setIsValidating] = useState(false);
   const [deliveryStatus, setDeliveryStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
   const [maskedNumber, setMaskedNumber] = useState("");
@@ -284,6 +322,7 @@ export default function Home() {
             error={phoneError}
             privacyReassurance="Your number is only used to send your recommendation. No spam."
             isSubmitting={isValidating}
+            onRestart={handleRestart}
           />
         </div>
       );

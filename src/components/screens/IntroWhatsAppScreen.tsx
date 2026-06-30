@@ -10,6 +10,7 @@ interface IntroWhatsAppScreenProps {
   error: string;
   privacyReassurance: string;
   isSubmitting: boolean;
+  onRestart: () => void;
 }
 
 export default function IntroWhatsAppScreen({
@@ -20,6 +21,7 @@ export default function IntroWhatsAppScreen({
   error,
   privacyReassurance,
   isSubmitting,
+  onRestart,
 }: IntroWhatsAppScreenProps) {
   const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     onWhatsAppChange(e.target.value.replace(/\D/g, ""));
@@ -135,7 +137,7 @@ export default function IntroWhatsAppScreen({
       </div>
 
       <div className="funnel-actions flex-shrink-0 px-6 pt-2">
-        <div className="max-w-md mx-auto">
+        <div className="max-w-md mx-auto space-y-2.5">
           <button
             onClick={onNext}
             disabled={!canContinue || isSubmitting}
@@ -150,6 +152,14 @@ export default function IntroWhatsAppScreen({
             ) : (
               "Continue"
             )}
+          </button>
+          <button
+            type="button"
+            onClick={onRestart}
+            disabled={isSubmitting}
+            className="w-full py-3 text-sm font-medium text-gray-500 rounded-2xl border border-gray-200 btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Start over
           </button>
         </div>
       </div>
